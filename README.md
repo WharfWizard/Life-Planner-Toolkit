@@ -27,7 +27,7 @@ You can keep personal spreadsheets or case files **private** in a separate repo.
 ---
 
 ## The Framework (quick lens)
-- **G – Goals:** Clarify purpose with S.T.O.R.I.E.S (Self, Tribe, Opportunity, Resources, Impact, Environment, Spirit)
+- **G – Goals:** Clarify purpose with S.T.O.R.I.E.S (Standards, Talents, Obyectives, Rich, Illness, Estate, Statement)
 - **A – Actions:** Habits, obstacles removed, next steps scheduled
 - **M – Means:** Time, skills, relationships, cash-flow (human & financial capital)
 - **E – Execution:** Review cycles, metrics, decision journal, course-correction

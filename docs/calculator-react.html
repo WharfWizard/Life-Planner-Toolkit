@@ -18,13 +18,13 @@
     header { position:sticky; top:0; background:rgba(255,255,255,.9); backdrop-filter: blur(6px); border-bottom:1px solid #e5e7eb; z-index:10; }
     header h1 { margin:0; font-size:22px; }
   </style>
-  <!-- React & ReactDOM -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <!-- Recharts UMD -->
-  <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
-  <!-- Babel (to transpile JSX in the browser) -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- React & ReactDOM (pinned) -->
+  <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <!-- Recharts UMD (pinned) -->
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <!-- Babel (to transpile JSX in the browser; pinned) -->
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
 </head>
 <body>
   <header>
@@ -40,7 +40,8 @@
     <div id="root"></div>
   </main>
 
-  <script type="text/babel">
+  <!-- App code -->
+  <script type="text/babel" data-presets="env,react">
     const { useMemo, useState } = React;
     const {
       ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
@@ -58,6 +59,7 @@
       for (let i = Math.max(0, fromIdx); i < toIdxExclusive; i++) out.push(i);
       return out;
     }
+    function lastId(arr) { return arr && arr.length ? (arr[arr.length - 1].id || 0) : 0; }
 
     function App() {
       const [currentAge, setCurrentAge] = useState(40);
@@ -72,7 +74,10 @@
         { id: 1, name: "Pension-like pot", inMonthly: 500, inStartAge: 45, inYears: 20, outStartAge: 66, outYears: 20, lockEqualInOut: true, overrideOutMonthly: "" },
       ]);
 
-      const horizonMonths = useMemo(() => Math.max(0, Math.round((endAge - currentAge) * 12 + 12)), [currentAge, endAge]);
+      const horizonMonths = useMemo(
+        () => Math.max(0, Math.round((endAge - currentAge) * 12 + 12)),
+        [currentAge, endAge]
+      );
 
       const engine = useMemo(() => {
         const months = horizonMonths;
@@ -99,20 +104,24 @@
           else if (p.lockEqualInOut) outMonthly = (p.inYears === p.outYears) ? p.inMonthly : (p.inMonthly * inMonths) / Math.max(1, outMonths);
           else outMonthly = (p.inMonthly * inMonths) / Math.max(1, outMonths);
 
+          // contributions
           monthsRange(inStart, inStart + inMonths).forEach((m) => {
             net[m] -= Number(p.inMonthly) || 0;
             potBalances[idx][m] = (m > 0 ? potBalances[idx][m - 1] : 0) + (Number(p.inMonthly) || 0);
           });
 
+          // carry balance forward
           for (let m = inStart + inMonths; m < months; m++) {
             potBalances[idx][m] = potBalances[idx][m - 1] || 0;
           }
 
+          // drawdown
           monthsRange(outStart, outStart + outMonths).forEach((m) => {
             net[m] += Number(outMonthly) || 0;
             potBalances[idx][m] = (m > 0 ? potBalances[idx][m - 1] : 0) - (Number(outMonthly) || 0);
           });
 
+          // backfill prior to any movement
           for (let m = 0; m < Math.min(inStart, months); m++) {
             potBalances[idx][m] = m > 0 ? potBalances[idx][m - 1] : 0;
           }
@@ -150,13 +159,13 @@
       }, [engine, horizonMonths, currentAge]);
 
       const addFlow = () => {
-        const id = (flows.at(-1)?.id || 0) + 1;
+        const id = lastId(flows) + 1;
         setFlows([...flows, { id, name: "New flow", amountMonthly: 0, startAge: currentAge, endAge }]);
       };
       const removeFlow = (id) => setFlows(flows.filter((f) => f.id !== id));
 
       const addPot = () => {
-        const id = (pots.at(-1)?.id || 0) + 1;
+        const id = lastId(pots) + 1;
         setPots([...pots, { id, name: `Pot ${id}`, inMonthly: 0, inStartAge: currentAge, inYears: 10, outStartAge: Math.min(endAge, currentAge + 11), outYears: 10, lockEqualInOut: true, overrideOutMonthly: "" }]);
       };
       const removePot = (id) => setPots(pots.filter((p) => p.id !== id));
@@ -168,10 +177,12 @@
             <h2 style={{marginTop:0}}>Planning Horizon</h2>
             <div style={{display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:12}}>
               <label>Current age
-                <input type="number" min={0} max={120} value={currentAge} onChange={(e)=>setCurrentAge(clamp(parseInt(e.target.value||0),0,120))}/>
+                <input type="number" min={0} max={120} value={currentAge}
+                  onChange={(e)=>setCurrentAge(clamp(parseInt(e.target.value||0),0,120))}/>
               </label>
               <label>End age
-                <input type="number" min={currentAge} max={120} value={endAge} onChange={(e)=>setEndAge(clamp(parseInt(e.target.value||0), currentAge, 120))}/>
+                <input type="number" min={currentAge} max={120} value={endAge}
+                  onChange={(e)=>setEndAge(clamp(parseInt(e.target.value||0), currentAge, 120))}/>
               </label>
               <div className="muted" style={{gridColumn:'span 2'}}>Engine runs monthly; charts & table summarise by age (yearly).</div>
             </div>
@@ -193,11 +204,18 @@
                 <tbody>
                   {flows.map((f)=>(
                     <tr key={f.id}>
-                      <td><input value={f.name} onChange={e=>setFlows(flows.map(x=>x.id===f.id? {...x, name:e.target.value}:x))}/></td>
-                      <td><input type="number" value={f.amountMonthly} onChange={e=>setFlows(flows.map(x=>x.id===f.id? {...x, amountMonthly: parseFloat(e.target.value||0)}:x))}/></td>
-                      <td><input type="number" value={f.startAge} onChange={e=>setFlows(flows.map(x=>x.id===f.id? {...x, startAge: parseFloat(e.target.value||0)}:x))}/></td>
-                      <td><input type="number" value={f.endAge} onChange={e=>setFlows(flows.map(x=>x.id===f.id? {...x, endAge: parseFloat(e.target.value||0)}:x))}/></td>
-                      <td style={{textAlign:'right'}}><button className="btn" style={{background:'#e2e8f0', color:'#0f172a'}} onClick={()=>removeFlow(f.id)}>Delete</button></td>
+                      <td><input value={f.name}
+                        onChange={e=>setFlows(flows.map(x=>x.id===f.id? {...x, name:e.target.value}:x))}/></td>
+                      <td><input type="number" value={f.amountMonthly}
+                        onChange={e=>setFlows(flows.map(x=>x.id===f.id? {...x, amountMonthly: parseFloat(e.target.value||0)}:x))}/></td>
+                      <td><input type="number" value={f.startAge}
+                        onChange={e=>setFlows(flows.map(x=>x.id===f.id? {...x, startAge: parseFloat(e.target.value||0)}:x))}/></td>
+                      <td><input type="number" value={f.endAge}
+                        onChange={e=>setFlows(flows.map(x=>x.id===f.id? {...x, endAge: parseFloat(e.target.value||0)}:x))}/></td>
+                      <td style={{textAlign:'right'}}>
+                        <button className="btn" style={{background:'#e2e8f0', color:'#0f172a'}}
+                          onClick={()=>removeFlow(f.id)}>Delete</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -224,28 +242,36 @@
                 return (
                   <div key={p.id} className="card" style={{padding:12}}>
                     <div style={{display:'flex', gap:8, alignItems:'center', marginBottom:8}}>
-                      <input value={p.name} onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, name:e.target.value}:x))} />
-                      <button className="btn" style={{background:'#e2e8f0', color:'#0f172a', marginLeft:'auto'}} onClick={()=>removePot(p.id)}>Delete</button>
+                      <input value={p.name}
+                        onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, name:e.target.value}:x))} />
+                      <button className="btn" style={{background:'#e2e8f0', color:'#0f172a', marginLeft:'auto'}}
+                        onClick={()=>removePot(p.id)}>Delete</button>
                     </div>
                     <div style={{display:'grid', gridTemplateColumns:'repeat(12, minmax(0,1fr))', gap:8, alignItems:'end'}}>
                       <label style={{gridColumn:'span 3'}}>Pay-in £/month
-                        <input type="number" value={p.inMonthly} onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, inMonthly: parseFloat(e.target.value||0)}:x))}/>
+                        <input type="number" value={p.inMonthly}
+                          onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, inMonthly: parseFloat(e.target.value||0)}:x))}/>
                       </label>
                       <label style={{gridColumn:'span 3'}}>Pay-in start age
-                        <input type="number" value={p.inStartAge} onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, inStartAge: parseFloat(e.target.value||0)}:x))}/>
+                        <input type="number" value={p.inStartAge}
+                          onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, inStartAge: parseFloat(e.target.value||0)}:x))}/>
                       </label>
                       <label style={{gridColumn:'span 2'}}>Pay-in years
-                        <input type="number" value={p.inYears} onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, inYears: parseFloat(e.target.value||0)}:x))}/>
+                        <input type="number" value={p.inYears}
+                          onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, inYears: parseFloat(e.target.value||0)}:x))}/>
                       </label>
                       <label style={{gridColumn:'span 3'}}>Pay-out start age
-                        <input type="number" value={p.outStartAge} onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, outStartAge: parseFloat(e.target.value||0)}:x))}/>
+                        <input type="number" value={p.outStartAge}
+                          onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, outStartAge: parseFloat(e.target.value||0)}:x))}/>
                       </label>
                       <label style={{gridColumn:'span 2'}}>Pay-out years
-                        <input type="number" value={p.outYears} onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, outYears: parseFloat(e.target.value||0)}:x))}/>
+                        <input type="number" value={p.outYears}
+                          onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, outYears: parseFloat(e.target.value||0)}:x))}/>
                       </label>
 
                       <label style={{gridColumn:'span 12', display:'flex', alignItems:'center', gap:8}}>
-                        <input type="checkbox" checked={p.lockEqualInOut} onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, lockEqualInOut: e.target.checked}:x))}/>
+                        <input type="checkbox" checked={p.lockEqualInOut}
+                          onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, lockEqualInOut: e.target.checked}:x))}/>
                         Lock £out to equal £in (if years match; else compute equivalent)
                       </label>
 
@@ -256,7 +282,7 @@
                           onChange={e=>setPots(pots.map(x=>x.id===p.id? {...x, overrideOutMonthly: e.target.value}:x))}/>
                         <span className="muted" style={{fontSize:12}}>(leave blank to auto-compute)</span>
 
-                        <div style={{marginLeft:'auto'}} className="muted">
+                        <div style={{margin-left:'auto'}} className="muted">
                           Implied pay-out: <strong>{currency(outMonthly)}</strong> / month
                         </div>
                       </label>
@@ -344,3 +370,4 @@
   </script>
 </body>
 </html>
+

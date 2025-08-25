@@ -9,6 +9,7 @@ title: Life Planner Toolkit
   <img src="./assets/Original.png" alt="Planning My Life Logo" class="logo">
 </header>
 
+
 <nav>
   <ul>
     <li><a href="./index.html">Home</a></li>

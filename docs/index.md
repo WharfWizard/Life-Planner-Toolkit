@@ -30,6 +30,7 @@ Explore the foundations of life planning and the GAME Plan framework.
 - [The GAME Plan](./Guides/The-GAME-Plan.html)  
 - [Knights of Aquarius: Code of Chivalry (PDF)](./Guides/Code-of-Chivalry.pdf)
 
+
 ---
 
 ## Worksheets (print or copy)

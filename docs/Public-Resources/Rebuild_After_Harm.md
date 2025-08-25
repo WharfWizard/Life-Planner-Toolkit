@@ -1,3 +1,19 @@
+<link rel="stylesheet" href="../style.css">
+<header>
+  <a href="../index.html"><img src="../assets/Original.png" alt="Planning My Life Logo" class="logo"></a>
+</header>
+
+<nav>
+  <ul>
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../Guides/">Guides</a></li>
+    <li><a href="../Worksheets/">Worksheets</a></li>
+    <li><a href="../Templates/">Templates</a></li>
+    <li><a href="../Public-Resources/">Resources</a></li>
+  </ul>
+</nav>
+
+
 # Rebuild After Harm
 
 If you’ve been harmed financially, emotionally, or spiritually — recovery is possible.  

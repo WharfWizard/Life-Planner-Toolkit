@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lifetime Cashflow Calculator v6</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --ink:#0f172a; --muted:#475569; --bg:#f8fafc; --brand:#2563eb; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; background:var(--bg); color:var(--ink); }
+    header { padding: 1.25rem 1.5rem; background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
+    h1 { margin: 0; font-size: 1.25rem; }
+    #badge { display:inline-block; margin-top:.5rem; background: var(--brand); color:white; padding:.35rem .65rem; border-radius:.5rem; font-weight:600; }
+    main { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .grid { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); }
+    .card { background:white; border:1px solid #e2e8f0; border-radius: .75rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); padding:1rem; }
+    .col-4 { grid-column: span 4; } .col-8 { grid-column: span 8; } .col-12 { grid-column: span 12; }
+    label { display:block; font-size:.9rem; color:var(--muted); margin:.25rem 0; }
+    input { width:100%; padding:.6rem .7rem; border:1px solid #cbd5e1; border-radius:.5rem; font-size:1rem; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border-bottom:1px solid #e2e8f0; padding:.5rem .6rem; text-align:right; font-variant-numeric: tabular-nums; }
+    th:first-child, td:first-child { text-align:left; }
+    .muted { color: var(--muted); }
+    .small { font-size: .85rem; }
+    footer { padding: 1rem 1.5rem; color: var(--muted); font-size: .85rem; }
+    @media (max-width: 900px) { .col-4, .col-8 { grid-column: span 12; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Lifetime Cashflow Calculator <span class="muted">/ Back‑of‑the‑Packet</span></h1>
+    <div id="badge">Loading…</div>
+  </header>
+
+  <main class="grid">
+    <!-- Inputs -->
+    <section class="card col-4" id="inputsCard">
+      <h2 class="small muted">Assumptions</h2>
+      <label for="currentAge">Current Age</label>
+      <input id="currentAge" type="number" min="0" max="120" value="40" />
+      <label for="endAge">End Age</label>
+      <input id="endAge" type="number" min="0" max="120" value="90" />
+      <!-- Add more inputs as v4 expects; these IDs are kept to match logs -->
+    </section>
+
+    <!-- Pots -->
+    <section class="card col-8" id="potsCard">
+      <h2 class="small muted">Pots</h2>
+      <table id="pots">
+        <thead><tr><th>Name</th><th>Balance</th></tr></thead>
+        <tbody id="potsBody"><tr><td class="muted">None yet</td><td class="muted" style="text-align:right">—</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- Flows -->
+    <section class="card col-12" id="flowsCard">
+      <h2 class="small muted">Flows (Annualised)</h2>
+      <table id="flowsTable">
+        <thead><tr><th>Year</th><th>Income</th><th>Expenses</th><th>Net</th></tr></thead>
+        <tbody id="flowsBody"><tr><td class="muted" colspan="4">No rows yet</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- Annual summary -->
+    <section class="card col-12" id="annualCard">
+      <h2 class="small muted">Annual Summary</h2>
+      <table id="annualTable">
+        <thead><tr><th>Age</th><th>Opening</th><th>Net Flow</th><th>Closing</th></tr></thead>
+        <tbody id="annualBody"><tr><td class="muted" colspan="4">No rows yet</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <span class="muted">AoLP | Planning My Life | Get SAFE</span>
+  </footer>
+
+  <!-- External JS (versioned for cache‑bust) -->
+  <script defer src="./calculator.js?v=2025-08-25-3"></script>
+</body>
+</html>

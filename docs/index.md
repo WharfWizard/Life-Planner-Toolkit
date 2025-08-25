@@ -71,8 +71,8 @@ Explore the foundations of life planning and the GAME Plan framework.
 ## 🔢 Lifetime Cashflow Forecaster (Back-of-the-Packet)
 
 Use our simple no-growth cashflow calculator (assumes **£ in = £ out**) to model contributions and withdrawals.
+👉 [Open the Forecaster](calculator-react.html)
 
-👉 [Open the Forecaster](../calculator-react.html)
 
 ---
 

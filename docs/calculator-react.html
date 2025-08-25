@@ -9,16 +9,27 @@
     .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
     .muted { color:#475569; }
   </style>
- <!-- React & ReactDOM -->
-<script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
 
-<!-- Recharts -->
-<script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
 
-<!-- Babel (for JSX) -->
-<script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  <!-- Recharts (primary CDN) -->
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <!-- Fallback to jsDelivr if Recharts didn't attach -->
+  <script>
+    (function ensureRecharts(){
+      if (window.Recharts) return;
+      var alt = document.createElement('script');
+      alt.src = "https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js";
+      alt.onload = function(){ console.log("Recharts loaded via jsDelivr"); };
+      alt.onerror = function(){ console.error("Recharts failed to load from both CDNs"); };
+      document.head.appendChild(alt);
+    })();
+  </script>
 
+  <!-- Babel (for JSX) -->
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
 </head>
 <body>
   <header>
@@ -35,7 +46,7 @@
     <div id="root"></div>
   </main>
 
-  <!-- App code (lives beside this file in docs/) -->
+  <!-- Load the JSX AFTER libs -->
   <script type="text/babel" data-presets="env,react" src="app.jsx"></script>
 </body>
 </html>

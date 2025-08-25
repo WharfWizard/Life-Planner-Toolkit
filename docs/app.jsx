@@ -1,3 +1,10 @@
+// Defensive: pull from window in case global name is not hoisted yet
+const {
+  ResponsiveContainer, BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, Tooltip, CartesianGrid, Legend,
+} = window.Recharts || {};
+
+
 // Minimal runtime error display (helps debug on GH Pages)
 window.addEventListener('error', function(e){
   var box = document.getElementById('err');

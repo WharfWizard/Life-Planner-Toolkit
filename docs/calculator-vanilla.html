@@ -20,6 +20,7 @@
     .row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .hidden { display:none; }
     #boot { background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; padding:8px 12px; border-radius:8px; margin:12px 0; }
+    #err { display:none; background:#fff0f0; color:#7f1d1d; border:1px solid #fecaca; padding:10px; margin:12px 0; border-radius:8px; }
   </style>
 </head>
 <body>
@@ -34,6 +35,7 @@
 
   <main class="container" style="padding:16px 16px 48px;">
     <div id="boot">✅ JS running. If you can read this, scripts are executing.</div>
+    <div id="err"></div>
 
     <!-- Horizon -->
     <section class="card" style="margin-bottom:16px">
@@ -101,6 +103,15 @@
   </main>
 
   <script>
+    // ----- Error helper -----
+    function showErr(msg) {
+      const box = document.getElementById('err');
+      box.style.display = 'block';
+      box.textContent = 'Error: ' + msg;
+      console.error(msg);
+    }
+    window.addEventListener('error', e => showErr(e.error?.message || e.message));
+
     // ---------- Utils ----------
     const £ = (n) => new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP",maximumFractionDigits:0}).format(isNaN(n)?0:n);
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -133,112 +144,141 @@
     const warnEl = document.getElementById('warn');
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // ---------- Rendering ----------
-    function render() {
-      // Inputs (horizon)
-      currentAgeEl.value = state.currentAge;
-      endAgeEl.value = state.endAge;
-      endAgeEl.min = state.currentAge;
-
-      // flows table
-      flowsTableBody.innerHTML = '';
-      state.flows.forEach(f => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><input value="${f.name}"></td>
-          <td><input type="number" value="${f.amountMonthly}"></td>
-          <td><input type="number" value="${f.startAge}"></td>
-          <td><input type="number" value="${f.endAge}"></td>
-          <td style="text-align:right"><button class="btn" style="background:#e2e8f0;color:#0f172a">Delete</button></td>
-        `;
-        const [nameEl, amtEl, sEl, eEl] = tr.querySelectorAll('input');
-        nameEl.oninput = (e)=>{ f.name = e.target.value; };
-        amtEl.oninput = (e)=>{ f.amountMonthly = parseFloat(e.target.value||0); };
-        sEl.oninput = (e)=>{ f.startAge = parseFloat(e.target.value||0); };
-        eEl.oninput = (e)=>{ f.endAge = parseFloat(e.target.value||0); };
-        tr.querySelector('button').onclick = ()=>{ state.flows = state.flows.filter(x=>x.id!==f.id); computeAndRenderAnnual(); render(); };
-        flowsTableBody.appendChild(tr);
+    // ---------- Render helpers ----------
+    function make(tag, props = {}, children = []) {
+      const el = document.createElement(tag);
+      Object.entries(props).forEach(([k, v]) => {
+        if (k === 'class') el.className = v;
+        else if (k === 'style') Object.assign(el.style, v);
+        else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
+        else el.setAttribute(k, v);
       });
-
-      // pots
-      potsWrap.innerHTML = '';
-      state.pots.forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'card';
-        div.style.padding = '12px';
-        div.innerHTML = `
-          <div class="row" style="margin-bottom:8px">
-            <input value="${p.name}" style="max-width:420px">
-            <button class="btn" style="background:#e2e8f0;color:#0f172a;margin-left:auto">Delete</button>
-          </div>
-          <div class="grid12">
-            <label style="grid-column:span 3">Pay-in £/month
-              <input type="number" value="${p.inMonthly}">
-            </label>
-            <label style="grid-column:span 3">Pay-in start age
-              <input type="number" value="${p.inStartAge}">
-            </label>
-            <label style="grid-column:span 2">Pay-in years
-              <input type="number" value="${p.inYears}">
-            </label>
-            <label style="grid-column:span 3">Pay-out start age
-              <input type="number" value="${p.outStartAge}">
-            </label>
-            <label style="grid-column:span 2">Pay-out years
-              <input type="number" value="${p.outYears}">
-            </label>
-
-            <label style="grid-column:span 12; display:flex; align-items:center; gap:8px">
-              <input type="checkbox" ${p.lockEqualInOut ? 'checked':''}>
-              Lock £out to equal £in (if years match; else compute equivalent)
-            </label>
-
-            <label style="grid-column:span 12; display:flex; align-items:center; gap:8px">
-              Override £/month out:
-              <input type="number" placeholder="auto" style="width:120px" value="${p.overrideOutMonthly}">
-              <span class="muted" style="font-size:12px">(leave blank to auto-compute)</span>
-              <div style="margin-left:auto" class="muted">Implied pay-out: <strong class="implied">—</strong> / month</div>
-            </label>
-          </div>
-        `;
-        const [nameEl, delBtn] = div.querySelectorAll('.row input, .row button');
-        nameEl.oninput = (e)=>{ p.name = e.target.value; };
-
-        const inputs = div.querySelectorAll('.grid12 input');
-        const [inMonthlyEl, inStartEl, inYearsEl, outStartEl, outYearsEl, lockEl, overrideEl] = inputs;
-        const update = ()=>{
-          p.inMonthly = parseFloat(inMonthlyEl.value||0);
-          p.inStartAge = parseFloat(inStartEl.value||0);
-          p.inYears = parseFloat(inYearsEl.value||0);
-          p.outStartAge = parseFloat(outStartEl.value||0);
-          p.outYears = parseFloat(outYearsEl.value||0);
-          p.lockEqualInOut = lockEl.checked;
-          p.overrideOutMonthly = overrideEl.value;
-          computeAndRenderAnnual();
-          // Implied
-          const inMonths = Math.max(0, Math.round(p.inYears * 12));
-          const outMonths = Math.max(0, Math.round(p.outYears * 12));
-          let implied = (p.inMonthly * inMonths) / Math.max(1, outMonths);
-          if (p.lockEqualInOut && p.inYears === p.outYears) implied = p.inMonthly;
-          const outMonthly = p.overrideOutMonthly !== "" ? parseFloat(p.overrideOutMonthly || 0) : implied;
-          div.querySelector('.implied').textContent = £(outMonthly);
-        };
-        inputs.forEach(el => el.oninput = update);
-        update();
-
-        delBtn.onclick = ()=>{ state.pots = state.pots.filter(x=>x.id!==p.id); computeAndRenderAnnual(); render(); };
-        potsWrap.appendChild(div);
+      (Array.isArray(children) ? children : [children]).forEach(c => {
+        if (c == null) return;
+        el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
       });
-
-      computeAndRenderAnnual();
+      return el;
     }
 
-    // ---------- Engine + table ----------
-    function computeAndRenderAnnual() {
-      const currentAge = state.currentAge;
-      const endAge = state.endAge;
-      const months = Math.max(0, Math.round((endAge - currentAge) * 12 + 12));
+    function render() {
+      try {
+        // Inputs (horizon)
+        currentAgeEl.value = state.currentAge;
+        endAgeEl.value = state.endAge;
+        endAgeEl.min = state.currentAge;
 
+        // flows table
+        flowsTableBody.innerHTML = '';
+        state.flows.forEach(f => {
+          const tr = document.createElement('tr');
+
+          const tdName = document.createElement('td');
+          const nameInput = make('input', { value: f.name, oninput: (e)=>{ f.name = e.target.value; }});
+          tdName.appendChild(nameInput);
+
+          const tdAmt = document.createElement('td');
+          const amtInput = make('input', { type:'number', value: f.amountMonthly, oninput: (e)=>{ f.amountMonthly = parseFloat(e.target.value||0); computeAndRenderAnnual(); }});
+          tdAmt.appendChild(amtInput);
+
+          const tdStart = document.createElement('td');
+          const sInput = make('input', { type:'number', value: f.startAge, oninput: (e)=>{ f.startAge = parseFloat(e.target.value||0); computeAndRenderAnnual(); }});
+          tdStart.appendChild(sInput);
+
+          const tdEnd = document.createElement('td');
+          const eInput = make('input', { type:'number', value: f.endAge, oninput: (e)=>{ f.endAge = parseFloat(e.target.value||0); computeAndRenderAnnual(); }});
+          tdEnd.appendChild(eInput);
+
+          const tdDel = make('td', { style:{textAlign:'right'}});
+          const delBtn = make('button', { class:'btn', style:{background:'#e2e8f0', color:'#0f172a'}, onclick: ()=>{ state.flows = state.flows.filter(x=>x.id!==f.id); computeAndRenderAnnual(); render(); }}, 'Delete');
+          tdDel.appendChild(delBtn);
+
+          [tdName, tdAmt, tdStart, tdEnd, tdDel].forEach(td => tr.appendChild(td));
+          flowsTableBody.appendChild(tr);
+        });
+
+        // pots
+        potsWrap.innerHTML = '';
+        state.pots.forEach(p => {
+          const card = make('div', { class:'card', style:{padding:'12px'} });
+
+          const row = make('div', { class:'row', style:{marginBottom:'8px'} });
+          const nameInput = make('input', { value:p.name, style:{maxWidth:'420px'}, oninput:(e)=>{ p.name = e.target.value; }});
+          const delBtn = make('button', { class:'btn', style:{background:'#e2e8f0', color:'#0f172a', marginLeft:'auto'}, onclick: ()=>{ state.pots = state.pots.filter(x=>x.id!==p.id); computeAndRenderAnnual(); render(); }}, 'Delete');
+          row.appendChild(nameInput); row.appendChild(delBtn);
+
+          const grid = make('div', { class:'grid12' });
+
+          const inMonthlyEl = make('input', { type:'number', value:p.inMonthly });
+          const inStartEl  = make('input', { type:'number', value:p.inStartAge });
+          const inYearsEl  = make('input', { type:'number', value:p.inYears });
+          const outStartEl = make('input', { type:'number', value:p.outStartAge });
+          const outYearsEl = make('input', { type:'number', value:p.outYears });
+          const lockEl     = make('input', { type:'checkbox', ...(p.lockEqualInOut ? {checked:true}: {}) });
+          const overrideEl = make('input', { type:'number', value:p.overrideOutMonthly, placeholder:'auto', style:{width:'120px'} });
+          const impliedSpan= make('strong', {}, '—');
+
+          function attach(labelText, el, spanCols) {
+            const lab = make('label', { style:{gridColumn:`span ${spanCols}`} }, [
+              document.createTextNode(labelText+' '), el
+            ]);
+            grid.appendChild(lab);
+          }
+          attach('Pay-in £/month', inMonthlyEl, 3);
+          attach('Pay-in start age', inStartEl, 3);
+          attach('Pay-in years', inYearsEl, 2);
+          attach('Pay-out start age', outStartEl, 3);
+          attach('Pay-out years', outYearsEl, 2);
+
+          const lockWrap = make('label', { style:{gridColumn:'span 12', display:'flex', alignItems:'center', gap:'8px'} }, [
+            lockEl, document.createTextNode('Lock £out to equal £in (if years match; else compute equivalent)')
+          ]);
+          grid.appendChild(lockWrap);
+
+          const overWrap = make('label', { style:{gridColumn:'span 12', display:'flex', alignItems:'center', gap:'8px'} }, [
+            document.createTextNode('Override £/month out: '), overrideEl,
+            make('span', { class:'muted', style:{fontSize:'12px'}}, '(leave blank to auto-compute)'),
+            make('div', { style:{marginLeft:'auto'}, class:'muted' }, ['Implied pay-out: ', impliedSpan, document.createTextNode(' / month')])
+          ]);
+          grid.appendChild(overWrap);
+
+          function updatePot() {
+            p.inMonthly = parseFloat(inMonthlyEl.value||0);
+            p.inStartAge = parseFloat(inStartEl.value||0);
+            p.inYears = parseFloat(inYearsEl.value||0);
+            p.outStartAge = parseFloat(outStartEl.value||0);
+            p.outYears = parseFloat(outYearsEl.value||0);
+            p.lockEqualInOut = !!lockEl.checked;
+            p.overrideOutMonthly = overrideEl.value;
+
+            const inMonths = Math.max(0, Math.round(p.inYears * 12));
+            const outMonths = Math.max(0, Math.round(p.outYears * 12));
+            let implied = (p.inMonthly * inMonths) / Math.max(1, outMonths);
+            if (p.lockEqualInOut && p.inYears === p.outYears) implied = p.inMonthly;
+            const outMonthly = p.overrideOutMonthly !== "" ? parseFloat(p.overrideOutMonthly || 0) : implied;
+            impliedSpan.textContent = £(outMonthly);
+
+            computeAndRenderAnnual();
+          }
+          [inMonthlyEl, inStartEl, inYearsEl, outStartEl, outYearsEl, lockEl, overrideEl].forEach(el => el.addEventListener('input', updatePot));
+          updatePot();
+
+          card.appendChild(row);
+          card.appendChild(grid);
+          potsWrap.appendChild(card);
+        });
+
+        computeAndRenderAnnual();
+      } catch (e) {
+        showErr(e.message || String(e));
+      }
+    }
+
+    function computeAndRenderAnnual() {
+      const currentAge = state.currentAge = clamp(parseFloat(currentAgeEl.value||0), 0, 120);
+      const endAge = state.endAge = clamp(parseFloat(endAgeEl.value||0), state.currentAge, 120);
+      endAgeEl.min = state.currentAge;
+
+      const months = Math.max(0, Math.round((endAge - currentAge) * 12 + 12));
       const net = new Array(months).fill(0);
       const potBalancesPerPot = state.pots.map(()=> new Array(months).fill(0));
 
@@ -246,7 +286,7 @@
       state.flows.forEach(f=>{
         const s = ageToMonthIndex(currentAge, f.startAge);
         const e = ageToMonthIndex(currentAge, f.endAge + 1);
-        monthsRange(s, e).forEach(m=>{ net[m] += Number(f.amountMonthly)||0; });
+        monthsRange(s, e).forEach(m=>{ if (m>=0 && m<months) net[m] += Number(f.amountMonthly)||0; });
       });
 
       // pots
@@ -263,8 +303,10 @@
         else outMonthly = (p.inMonthly * inMonths) / Math.max(1, outMonths);
 
         monthsRange(inStart, inStart + inMonths).forEach(m=>{
-          net[m] -= Number(p.inMonthly)||0;
-          potBalancesPerPot[idx][m] = (m>0? potBalancesPerPot[idx][m-1]:0) + (Number(p.inMonthly)||0);
+          if (m>=0 && m<months) {
+            net[m] -= Number(p.inMonthly)||0;
+            potBalancesPerPot[idx][m] = (m>0? potBalancesPerPot[idx][m-1]:0) + (Number(p.inMonthly)||0);
+          }
         });
 
         for (let m=inStart+inMonths; m<months; m++) {
@@ -272,8 +314,10 @@
         }
 
         monthsRange(outStart, outStart + outMonths).forEach(m=>{
-          net[m] += Number(outMonthly)||0;
-          potBalancesPerPot[idx][m] = (m>0? potBalancesPerPot[idx][m-1]:0) - (Number(outMonthly)||0);
+          if (m>=0 && m<months) {
+            net[m] += Number(outMonthly)||0;
+            potBalancesPerPot[idx][m] = (m>0? potBalancesPerPot[idx][m-1]:0) - (Number(outMonthly)||0);
+          }
         });
 
         for (let m=0; m<Math.min(inStart, months); m++) {
@@ -314,31 +358,30 @@
       annualBody.innerHTML = '';
       rows.forEach(r=>{
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${r.age}</td>
-          <td>${£(r.inflows)}</td>
-          <td>${£(r.outflows)}</td>
-          <td style="color:${r.net>=0 ? '#047857':'#be123c'}">${£(r.net)}</td>
-          <td style="color:${r.potBalance>=0 ? 'inherit':'#be123c'}">${£(r.potBalance)}</td>
-        `;
+        const tdAge = document.createElement('td'); tdAge.textContent = r.age;
+        const tdIn  = document.createElement('td'); tdIn.textContent  = £(r.inflows);
+        const tdOut = document.createElement('td'); tdOut.textContent = £(r.outflows);
+        const tdNet = document.createElement('td'); tdNet.textContent = £(r.net); tdNet.style.color = r.net>=0 ? '#047857' : '#be123c';
+        const tdBal = document.createElement('td'); tdBal.textContent = £(r.potBalance); if (r.potBalance<0) tdBal.style.color = '#be123c';
+        [tdAge, tdIn, tdOut, tdNet, tdBal].forEach(td => tr.appendChild(td));
         annualBody.appendChild(tr);
       });
       warnEl.classList.toggle('hidden', !negPotSeen);
     }
 
     // ---------- Events ----------
-    currentAgeEl.oninput = (e)=>{ state.currentAge = clamp(parseFloat(e.target.value||0), 0, 120); endAgeEl.min = state.currentAge; computeAndRenderAnnual(); };
-    endAgeEl.oninput = (e)=>{ state.endAge = clamp(parseFloat(e.target.value||0), state.currentAge, 120); computeAndRenderAnnual(); };
+    currentAgeEl.addEventListener('input', (e)=>{ state.currentAge = clamp(parseFloat(e.target.value||0), 0, 120); endAgeEl.min = state.currentAge; computeAndRenderAnnual(); });
+    endAgeEl.addEventListener('input', (e)=>{ state.endAge = clamp(parseFloat(e.target.value||0), state.currentAge, 120); computeAndRenderAnnual(); });
 
-    addFlowBtn.onclick = ()=>{
+    document.getElementById('addFlow').addEventListener('click', ()=>{
       state.flows.push({ id: state.nextFlowId++, name:"New flow", amountMonthly:0, startAge: state.currentAge, endAge: state.endAge });
       render();
-    };
+    });
 
-    addPotBtn.onclick = ()=>{
+    document.getElementById('addPot').addEventListener('click', ()=>{
       state.pots.push({ id: state.nextPotId++, name:`Pot ${state.nextPotId-1}`, inMonthly:0, inStartAge: state.currentAge, inYears:10, outStartAge: Math.min(state.endAge, state.currentAge+11), outYears:10, lockEqualInOut:true, overrideOutMonthly:"" });
       render();
-    };
+    });
 
     // ---------- Boot ----------
     render();

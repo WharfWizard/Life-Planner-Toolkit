@@ -7,7 +7,8 @@
   <style>
     :root { --ink:#0f172a; --muted:#475569; --bg:#f8fafc; --brand:#2563eb; }
     * { box-sizing: border-box; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; background:var(--bg); color:var(--ink); }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:var(--bg); color:var(--ink); }
     header { padding: 1.25rem 1.5rem; background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
     h1 { margin: 0; font-size: 1.25rem; }
     #badge { display:inline-block; margin-top:.5rem; background: var(--brand); color:white; padding:.35rem .65rem; border-radius:.5rem; font-weight:600; }
@@ -16,7 +17,10 @@
     .card { background:white; border:1px solid #e2e8f0; border-radius: .75rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); padding:1rem; }
     .col-4 { grid-column: span 4; } .col-8 { grid-column: span 8; } .col-12 { grid-column: span 12; }
     label { display:block; font-size:.9rem; color:var(--muted); margin:.25rem 0; }
+    input, button { font: inherit; }
     input { width:100%; padding:.6rem .7rem; border:1px solid #cbd5e1; border-radius:.5rem; font-size:1rem; }
+    button { padding:.45rem .7rem; border:1px solid #cbd5e1; border-radius:.5rem; background:white; cursor:pointer; }
+    button:hover { background:#f1f5f9; }
     table { width:100%; border-collapse: collapse; }
     th, td { border-bottom:1px solid #e2e8f0; padding:.5rem .6rem; text-align:right; font-variant-numeric: tabular-nums; }
     th:first-child, td:first-child { text-align:left; }
@@ -40,14 +44,14 @@
       <input id="currentAge" type="number" min="0" max="120" value="40" />
       <label for="endAge">End Age</label>
       <input id="endAge" type="number" min="0" max="120" value="90" />
-      <div style="display:flex; gap:.5rem; margin-top:.75rem;">
-  <button id="btnExport" type="button">Export JSON</button>
-  <button id="btnImport" type="button">Import JSON</button>
-  <button id="btnReset"  type="button">Reset</button>
-</div>
-<input id="importFile" type="file" accept="application/json" style="display:none;" />
 
-      <!-- Add more inputs as v4 expects; these IDs are kept to match logs -->
+      <div style="display:flex; gap:.5rem; margin-top:.75rem;">
+        <button id="btnExport" type="button">Export JSON</button>
+        <button id="btnImport" type="button">Import JSON</button>
+        <button id="btnReset"  type="button">Reset</button>
+      </div>
+      <input id="importFile" type="file" accept="application/json" style="display:none;" />
+      <p class="small muted" style="margin-top:.5rem;">Tip: tweak ages to see rows update live.</p>
     </section>
 
     <!-- Pots -->
@@ -83,6 +87,6 @@
   </footer>
 
   <!-- External JS (versioned for cache‑bust) -->
-  <script defer src="./calculator.js?v=2025-08-25-3"></script>
+  <script defer src="./calculator.js?v=2025-08-25-5"></script>
 </body>
 </html>

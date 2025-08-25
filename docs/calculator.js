@@ -157,6 +157,8 @@
 
     // First paint
     readInputsIntoState();
+    bindDevButtons();
+
     window.compute();
     window.render();
   }

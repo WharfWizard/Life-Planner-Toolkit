@@ -1,8 +1,11 @@
 ---
 title: Guides
 ---
-
 <link rel="stylesheet" href="../style.css">
+
+<header>
+  <a href="../index.html"><img src="../assets/Original.png" alt="Planning My Life Logo" class="logo"></a>
+</header>
 
 <nav>
   <ul>
@@ -15,7 +18,6 @@ title: Guides
 </nav>
 
 # Guides
-
 Explore the foundations of life planning and the GAME Plan framework.
 
 - [What is Life Planning?](./What-is-Life-Planning.html)

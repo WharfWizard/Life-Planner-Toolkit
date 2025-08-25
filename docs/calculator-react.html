@@ -2,79 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Cashflow (Debug Loader)</title>
+  <title>Back-of-the-Packet Cashflow (No Build)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>body{font-family:system-ui;padding:16px} code{background:#f1f5f9;padding:2px 6px;border-radius:6px}</style>
-</head>
-<body>
-  <h1>🔎 Calculator debug shell</h1>
-  <p id="status">HTML loaded.</p>
-  <noscript style="color:#b91c1c">❌ JavaScript is disabled.</noscript>
-
-  <script>
-    const s = (msg) => document.getElementById('status').textContent += ' ' + msg;
-    s('JS running.');
-
-    // Small helper to inject scripts and report
-    function loadScript(src, label, cb){
-      var el = document.createElement('script');
-      el.src = src;
-      el.onload = function(){ s(label + ' ok.'); cb && cb(true); };
-      el.onerror = function(){ s(label + ' FAIL.'); cb && cb(false); };
-      document.head.appendChild(el);
-    }
-  </script>
+  <style>
+    body { margin:0; background:#f8fafc; color:#0f172a; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .card { background:#fff; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.06); padding:16px; }
+    .muted { color:#475569; }
+    input { border:1px solid #cbd5e1; border-radius:10px; padding:6px 8px; width:100%; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:8px; border-top:1px solid #e2e8f0; text-align:left; }
+    .btn { padding:8px 12px; border-radius:12px; border:0; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; }
+    .btn:hover { filter:brightness(.95); }
+    .warn { background:#ffe4e6; color:#9f1239; padding:4px 8px; border-radius:999px; font-size:12px; }
+  </style>
 
   <!-- React & ReactDOM -->
-  <script>
-    loadScript('https://unpkg.com/react@18.2.0/umd/react.production.min.js', 'React', function(){
-      loadScript('https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js', 'ReactDOM', function(){
-        // Try Recharts from jsDelivr first (primary), then unpkg (fallback)
-        loadScript('https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js', 'Recharts(jsDelivr)', function(ok1){
-          if (!ok1) {
-            loadScript('https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js', 'Recharts(unpkg)', function(){});
-          }
-          // Babel last
-          loadScript('https://unpkg.com/@babel/standalone@7.25.6/babel.min.js', 'Babel', function(){
-            // After a small delay, try to mount a tiny chart
-            setTimeout(function(){
-              var root = document.getElementById('root');
-              if (!window.React || !window.ReactDOM) {
-                root.textContent = '❌ React/ReactDOM missing';
-                return;
-              }
-              if (!window.Recharts) {
-                root.innerHTML = '❌ Recharts missing.<br><small>CDN blocked? Try a private window, disable extensions, or different network.</small>';
-                return;
-              }
-              const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis } = window.Recharts;
-              const r = ReactDOM.createRoot(root);
-              r.render(
-                React.createElement('div', null,
-                  React.createElement('h2', null, '✅ React + Recharts mounted'),
-                  React.createElement('div', {style:{height:'160px'}},
-                    React.createElement(ResponsiveContainer, {width:'100%', height:'100%'},
-                      React.createElement(BarChart, {data:[{x:'A',y:10},{x:'B',y:20}]},
-                        React.createElement(XAxis, {dataKey:'x'}),
-                        React.createElement(YAxis, null),
-                        React.createElement(Bar, {dataKey:'y'})
-                      )
-                    )
-                  )
-                )
-              );
-            }, 150);
-          });
-        });
-      });
-    });
-  </script>
+  <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
 
-  <div id="root" style="margin-top:12px;padding:12px;border:1px solid #e5e7eb;border-radius:8px"></div>
+  <!-- Chart.js (single UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
-  <hr style="margin:24px 0">
-  <p><strong>What you should see above as it loads:</strong><br>
-    <code>HTML loaded. JS running. React ok. ReactDOM ok. Recharts(jsDelivr) ok.</code> (or the unpkg fallback) <code>Babel ok.</code><br>
-    Then a mini chart with “✅ React + Recharts mounted”.</p>
+  <!-- Babel (for JSX in app.js) -->
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="container" style="display:flex; align-items:center; gap:12px; padding:12px 16px;">
+      <h1 style="margin:0; font-size:22px;">Lifetime Cashflow (Back-of-the-Packet)</h1>
+      <div class="muted" style="margin-left:auto; font-size:14px;">
+        Assumption: <strong>£ in = £ out</strong> (no growth • no inflation • no risk)
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding:16px 16px 48px;">
+    <div id="root"></div>
+  </main>
+
+  <!-- App (React UI + Chart.js) -->
+  <script type="text/babel" data-presets="env,react" src="app.js?v=10"></script>
 </body>
 </html>

@@ -23,11 +23,12 @@ An open, practical library for self-directed life planning using the **GAME Plan
 
 ---
 
-## Start Here
-- 👉 **What is Life Planning?** — concepts & benefits  
-  [Guides/What-is-Life-Planning.html](./Guides/What-is-Life-Planning.html)
-- 👉 **The GAME Plan** — fast overview of the cycle  
-  [Guides/The-GAME-Plan.html](./Guides/The-GAME-Plan.html)
+## Guides (Start Here)
+Explore the foundations of life planning and the GAME Plan framework.
+
+- [What is Life Planning?](./What-is-Life-Planning.html)  
+- [The GAME Plan](./The-GAME-Plan.html)  
+- [Knights of Aquarius: Code of Chivalry (PDF)](./Knights_of_Aquarius_Code_of_Chivalry.pdf)
 
 ---
 

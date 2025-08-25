@@ -9,12 +9,9 @@
     .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
     .muted { color:#475569; }
   </style>
-  <!-- React & ReactDOM (pinned) -->
   <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-  <!-- Recharts UMD (pinned) -->
   <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js"></script>
-  <!-- Babel Standalone (pinned) -->
   <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
 </head>
 <body>
@@ -32,19 +29,7 @@
     <div id="root"></div>
   </main>
 
-  <!-- App code: external JSX so Jekyll/Liquid won't touch it -->
+  <!-- App code (lives beside this file in docs/) -->
   <script type="text/babel" data-presets="env,react" src="app.jsx"></script>
-
-  <!-- Optional: auto-height when embedded -->
-  <script>
-    (function () {
-      function post() {
-        var h = document.documentElement.scrollHeight || document.body.scrollHeight || 900;
-        parent && parent.postMessage({ type: "pml:height", height: h }, "*");
-      }
-      if ('ResizeObserver' in window) new ResizeObserver(post).observe(document.body);
-      window.addEventListener("load", post); post();
-    })();
-  </script>
 </body>
 </html>

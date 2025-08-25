@@ -1,8 +1,4 @@
 
----
-title: Life Planner Toolkit
----
-
 <link rel="stylesheet" href="./style.css">
 
 <header>

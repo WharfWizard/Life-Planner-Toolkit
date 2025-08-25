@@ -1,8 +1,11 @@
 ---
 title: Worksheets
 ---
-
 <link rel="stylesheet" href="../style.css">
+
+<header>
+  <a href="../index.html"><img src="../assets/Original.png" alt="Planning My Life Logo" class="logo"></a>
+</header>
 
 <nav>
   <ul>
@@ -15,7 +18,6 @@ title: Worksheets
 </nav>
 
 # Worksheets
-
 Printable and editable worksheets to help you plan life before money.
 
 - [Goals Checklist](./Goals_Checklist.html)

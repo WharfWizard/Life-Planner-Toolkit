@@ -94,3 +94,35 @@ table th {
 .button:hover {
   background: #007788;
 }
+/* ===== Navigation Bar ===== */
+nav {
+  background-color: #004466;
+  padding: 0.6rem 1rem;
+  margin-bottom: 2rem;
+  border-radius: 6px;
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+nav ul li {
+  display: inline;
+}
+
+nav ul li a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+nav ul li a:hover {
+  text-decoration: underline;
+  color: #cceeff;
+}
+

@@ -1,8 +1,11 @@
 ---
 title: Templates
 ---
-
 <link rel="stylesheet" href="../style.css">
+
+<header>
+  <a href="../index.html"><img src="../assets/Original.png" alt="Planning My Life Logo" class="logo"></a>
+</header>
 
 <nav>
   <ul>
@@ -15,7 +18,6 @@ title: Templates
 </nav>
 
 # Templates
-
 Starter documents you can adapt for your own planning and advocacy.
 
 - [Decision Journal](./Decision_Journal.html)

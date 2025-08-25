@@ -40,6 +40,13 @@
       <input id="currentAge" type="number" min="0" max="120" value="40" />
       <label for="endAge">End Age</label>
       <input id="endAge" type="number" min="0" max="120" value="90" />
+      <div style="display:flex; gap:.5rem; margin-top:.75rem;">
+  <button id="btnExport" type="button">Export JSON</button>
+  <button id="btnImport" type="button">Import JSON</button>
+  <button id="btnReset"  type="button">Reset</button>
+</div>
+<input id="importFile" type="file" accept="application/json" style="display:none;" />
+
       <!-- Add more inputs as v4 expects; these IDs are kept to match logs -->
     </section>
 

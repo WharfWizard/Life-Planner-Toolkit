@@ -1,10 +1,9 @@
----
-title: Guides
----
 <link rel="stylesheet" href="../style.css">
 
 <header>
-  <a href="../index.html"><img src="../assets/Original.png" alt="Planning My Life Logo" class="logo"></a>
+  <a href="../index.html">
+    <img src="../assets/Original.png" alt="Planning My Life Logo" class="logo">
+  </a>
 </header>
 
 <nav>
@@ -18,8 +17,9 @@ title: Guides
 </nav>
 
 # Guides
+
 Explore the foundations of life planning and the GAME Plan framework.
 
-- [What is Life Planning?](./What-is-Life-Planning.html)
-- [The GAME Plan](./The-GAME-Plan.html)
-- [Knights of Aquarius: Code of Chivalry (PDF)](./Code-of-Chivalry.pdf)
+- [What is Life Planning?](./What-is-Life-Planning.html)  
+- [The GAME Plan](./The-GAME-Plan.html)  
+- <a href="./Knights_of_Aquarius_Code_of_Chivalry.pdf" target="_blank">Knights of Aquarius: Code of Chivalry (PDF)</a>

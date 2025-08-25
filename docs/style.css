@@ -1,60 +1,92 @@
-/* ===== Life Planner Toolkit Styles ===== */
+/* ===== Life Planner Toolkit - Planning My Life Theme ===== */
 
-/* Base reset */
+/* Import Comfortaa font */
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap');
+
+/* Base styles */
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Comfortaa', sans-serif;
   line-height: 1.6;
-  background: #fdfdfd;
+  background: #ffffff; /* keep body white for readability */
   color: #333;
-  max-width: 900px;
+  max-width: 960px;
   margin: auto;
   padding: 2rem;
 }
 
-/* Headings */
+/* Header / Branding */
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+header img {
+  max-width: 200px;
+  margin-bottom: 1rem;
+}
+
 h1, h2, h3, h4 {
-  font-family: 'Georgia', serif;
-  color: #004466; /* Deep teal, professional and calm */
+  font-family: 'Comfortaa', sans-serif;
+  color: #E71616; /* Planning My Life red */
   margin-top: 2rem;
   margin-bottom: 1rem;
 }
 
 h1 {
   font-size: 2.2rem;
-  border-bottom: 2px solid #0099aa; /* Accent underline */
+  border-bottom: 3px solid #E71616;
   padding-bottom: 0.5rem;
-}
-
-h2 {
-  font-size: 1.6rem;
-}
-
-h3 {
-  font-size: 1.3rem;
-  color: #006677;
 }
 
 /* Links */
 a {
-  color: #0099aa;
+  color: #E71616;
   text-decoration: none;
+  font-weight: 600;
 }
 
 a:hover {
   text-decoration: underline;
-  color: #006677;
 }
 
-/* Lists */
-ul, ol {
-  padding-left: 1.2rem;
+/* Navigation bar */
+nav {
+  background-color: #E71616;
+  padding: 0.6rem 1rem;
+  margin-bottom: 2rem;
+  border-radius: 8px;
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+nav ul li {
+  display: inline;
+}
+
+nav ul li a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+nav ul li a:hover {
+  text-decoration: underline;
+  color: #ffe6e6;
 }
 
 /* Blockquotes */
 blockquote {
-  border-left: 4px solid #0099aa;
+  border-left: 4px solid #E71616;
   padding-left: 1rem;
   font-style: italic;
   color: #555;
@@ -75,14 +107,14 @@ table th, table td {
 }
 
 table th {
-  background: #f0f9fa;
+  background: #ffe6e6;
   font-weight: bold;
 }
 
-/* Buttons (optional) */
+/* Optional buttons */
 .button {
   display: inline-block;
-  background: #0099aa;
+  background: #E71616;
   color: white;
   padding: 0.6rem 1.2rem;
   border-radius: 6px;
@@ -92,37 +124,5 @@ table th {
 }
 
 .button:hover {
-  background: #007788;
+  background: #b51212;
 }
-/* ===== Navigation Bar ===== */
-nav {
-  background-color: #004466;
-  padding: 0.6rem 1rem;
-  margin-bottom: 2rem;
-  border-radius: 6px;
-}
-
-nav ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-nav ul li {
-  display: inline;
-}
-
-nav ul li a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-nav ul li a:hover {
-  text-decoration: underline;
-  color: #cceeff;
-}
-

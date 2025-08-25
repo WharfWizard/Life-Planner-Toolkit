@@ -61,7 +61,7 @@ An open, practical library for self-directed life planning using the **GAME Plan
 
 ---
 
-## 📊 Live Google Sheet
+## Live Done-by-you Planning My Life Google Sheet
 [Open the Google Sheet](https://docs.google.com/spreadsheets/d/e/2PACX-1vSpDiQkEKvEX13tdtLqpSlr_C0wSkt1baUWYJuoJswyYmnus15NWyK4nqLmoS6xjRmoUf0lTPGYjOml/pubhtml)
 
 ---

@@ -126,3 +126,15 @@ table th {
 .button:hover {
   background: #b51212;
 }
+/* ===== Logo styling ===== */
+header {
+  text-align: center; /* centers logo */
+  margin: 1.5rem 0;
+}
+
+header .logo {
+  max-width: 160px; /* adjust size */
+  height: auto;
+  display: inline-block;
+}
+

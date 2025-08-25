@@ -133,7 +133,7 @@ header {
 }
 
 header .logo {
-  width: 80px;     /* fixed brand size */
+  width: 160px;     /* fixed brand size */
   height: auto;
   display: inline-block;
 }

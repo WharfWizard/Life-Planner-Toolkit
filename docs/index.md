@@ -67,6 +67,13 @@ Explore the foundations of life planning and the GAME Plan framework.
 [Open the Google Sheet](https://docs.google.com/spreadsheets/d/e/2PACX-1vSpDiQkEKvEX13tdtLqpSlr_C0wSkt1baUWYJuoJswyYmnus15NWyK4nqLmoS6xjRmoUf0lTPGYjOml/pubhtml)
 
 ---
+<nav>
+  <a href="calculator.html">Calculator</a>
+</nav>
+
+---
+
+
 
 ## How to Use This (no installs)
 1. Open any Markdown page → click **Edit this file** in GitHub or copy to **StackEdit** (stackedit.io) for live preview.  

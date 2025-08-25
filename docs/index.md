@@ -1,19 +1,3 @@
----
-title: Life Planner Toolkit
----
-
-<link rel="stylesheet" href="./style.css">
-
-<nav>
-  <ul>
-    <li><a href="./index.html">Home</a></li>
-    <li><a href="./Guides/What-is-Life-Planning.html">Guides</a></li>
-    <li><a href="./Worksheets/">Worksheets</a></li>
-    <li><a href="./Templates/">Templates</a></li>
-    <li><a href="./Public-Resources/">Resources</a></li>
-  </ul>
-</nav>
-
 
 ---
 title: Life Planner Toolkit

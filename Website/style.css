@@ -1,0 +1,96 @@
+/* ===== Life Planner Toolkit Styles ===== */
+
+/* Base reset */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  background: #fdfdfd;
+  color: #333;
+  max-width: 900px;
+  margin: auto;
+  padding: 2rem;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+  font-family: 'Georgia', serif;
+  color: #004466; /* Deep teal, professional and calm */
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-size: 2.2rem;
+  border-bottom: 2px solid #0099aa; /* Accent underline */
+  padding-bottom: 0.5rem;
+}
+
+h2 {
+  font-size: 1.6rem;
+}
+
+h3 {
+  font-size: 1.3rem;
+  color: #006677;
+}
+
+/* Links */
+a {
+  color: #0099aa;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: #006677;
+}
+
+/* Lists */
+ul, ol {
+  padding-left: 1.2rem;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid #0099aa;
+  padding-left: 1rem;
+  font-style: italic;
+  color: #555;
+  margin: 1.5rem 0;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  width: 100%;
+}
+
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 0.6rem;
+  text-align: left;
+}
+
+table th {
+  background: #f0f9fa;
+  font-weight: bold;
+}
+
+/* Buttons (optional) */
+.button {
+  display: inline-block;
+  background: #0099aa;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.button:hover {
+  background: #007788;
+}

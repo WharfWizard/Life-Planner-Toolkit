@@ -28,7 +28,7 @@ Explore the foundations of life planning and the GAME Plan framework.
 
 - [What is Life Planning?](./What-is-Life-Planning.html)  
 - [The GAME Plan](./The-GAME-Plan.html)  
-- [Knights of Aquarius: Code of Chivalry (PDF)](./Knights_of_Aquarius_Code_of_Chivalry.pdf)
+- [Knights of Aquarius: Code of Chivalry (PDF)](./Codes-of-Chivalry.pdf)
 
 ---
 

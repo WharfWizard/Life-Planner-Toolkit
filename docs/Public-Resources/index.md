@@ -28,3 +28,12 @@ Explore these ready-to-use Notion templates to put the GAME Plan and Get SAFE in
 
 - [The GAME Plan Report (Notion Template)](https://www.notion.so/The-GAME-Plan-Report-243e658e009e8079a461ead69d2a6790?source=copy_link)
 - [The Goliathon Masterclass (Notion Template)](https://www.notion.so/The-Goliathon-Masterclass-254e658e009e81619ed7e744c5e0592b?source=copy_link)
+
+<footer>
+  <p>
+    © Academy of Life Planning · 
+    <a href="https://aolp.co.uk" target="_blank">AoLP</a> |
+    <a href="https://www.planningmy.life" target="_blank">Planning My Life</a> |
+    <a href="https://www.aolp.info/projects" target="_blank">Get SAFE</a>
+  </p>
+</footer>

@@ -1,25 +1,19 @@
-// Show any runtime error on page
+// Visible error helper
 function showErr(msg) {
-  const box = document.getElementById('err') || (() => {
-    const b = document.createElement('div');
-    b.id = 'err';
-    b.style.cssText = 'background:#fff0f0;color:#7f1d1d;border:1px solid #fecaca;padding:10px;margin:12px 0;border-radius:8px';
-    document.body.prepend(b);
-    return b;
-  })();
-  box.textContent = 'Error: ' + msg;
+  var box = document.getElementById('err');
+  if (box) { box.style.display='block'; box.textContent = 'Error: ' + msg; }
   console.error(msg);
 }
+window.addEventListener('error', e => showErr(e.error?.message || e.message));
 
 // Sanity logs
-console.log('React:', !!window.React, 'ReactDOM:', !!window.ReactDOM, 'Recharts:', !!window.Recharts);
+console.log('Sanity → React:', !!window.React, 'ReactDOM:', !!window.ReactDOM, 'Recharts:', !!window.Recharts);
 
-// Simple render without any app logic
 const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } = window.Recharts || {};
 
 function Smoke() {
   return (
-    <div style={{background:'#fff', padding:16, borderRadius:12}}>
+    <div style={{background:'#fff', padding:16, borderRadius:12, boxShadow:'0 2px 12px rgba(0,0,0,.06)'}}>
       <h2 style={{marginTop:0}}>✅ App booted</h2>
       <div style={{height:200}}>
         <ResponsiveContainer width="100%" height="100%">
@@ -43,4 +37,3 @@ try {
 } catch (e) {
   showErr(e.message || String(e));
 }
-

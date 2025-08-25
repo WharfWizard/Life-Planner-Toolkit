@@ -26,9 +26,9 @@ An open, practical library for self-directed life planning using the **GAME Plan
 ## Guides (Start Here)
 Explore the foundations of life planning and the GAME Plan framework.
 
-- [What is Life Planning?](./What-is-Life-Planning.html)  
-- [The GAME Plan](./The-GAME-Plan.html)  
-- [Knights of Aquarius: Code of Chivalry (PDF)](./Code-of-Chivalry.pdf)
+- [What is Life Planning?](./Guides/What-is-Life-Planning.html)  
+- [The GAME Plan](./Guides/The-GAME-Plan.html)  
+- [Knights of Aquarius: Code of Chivalry (PDF)](./Guides/Code-of-Chivalry.pdf)
 
 ---
 

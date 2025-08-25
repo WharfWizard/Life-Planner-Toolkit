@@ -21,6 +21,9 @@
     .hidden { display:none; }
     #boot { background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; padding:8px 12px; border-radius:8px; margin:12px 0; }
     #err { display:none; background:#fff0f0; color:#7f1d1d; border:1px solid #fecaca; padding:10px; margin:12px 0; border-radius:8px; }
+    #dbg { background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; padding:8px 12px; border-radius:8px; margin:12px 0; font-size:14px; }
+    .mirror { font-size:13px; color:#475569; margin-top:8px; }
+    .mirror code { background:#f1f5f9; padding:2px 6px; border-radius:6px; }
   </style>
 </head>
 <body>
@@ -36,6 +39,7 @@
   <main class="container" style="padding:16px 16px 48px;">
     <div id="boot">✅ JS running. If you can read this, scripts are executing.</div>
     <div id="err"></div>
+    <div id="dbg">Status will appear here…</div>
 
     <!-- Horizon -->
     <section class="card" style="margin-bottom:16px">
@@ -65,6 +69,7 @@
           <tbody></tbody>
         </table>
       </div>
+      <div id="flowsMirror" class="mirror"></div>
       <p class="muted" style="font-size:12px; margin-top:8px">Tip: positive = income; negative = expense. Ages inclusive.</p>
     </section>
 
@@ -76,6 +81,7 @@
       </div>
       <p class="muted">Total withdrawals equal total contributions (unless overridden). If years differ, we compute a level payout.</p>
       <div id="pots"></div>
+      <div id="potsMirror" class="mirror"></div>
     </section>
 
     <!-- Annual table -->
@@ -94,6 +100,7 @@
           <tbody></tbody>
         </table>
       </div>
+      <div id="annualMirror" class="mirror"></div>
       <p class="muted" style="font-size:12px; margin-top:8px">No-growth, no-inflation model for quick feasibility checks. For regulated advice, use appropriate tools & disclosures.</p>
     </section>
 
@@ -142,6 +149,10 @@
     const addPotBtn = document.getElementById('addPot');
     const annualBody = document.querySelector('#annualTable tbody');
     const warnEl = document.getElementById('warn');
+    const dbg = document.getElementById('dbg');
+    const flowsMirror = document.getElementById('flowsMirror');
+    const potsMirror = document.getElementById('potsMirror');
+    const annualMirror = document.getElementById('annualMirror');
     document.getElementById('year').textContent = new Date().getFullYear();
 
     // ---------- Render helpers ----------
@@ -195,6 +206,9 @@
           [tdName, tdAmt, tdStart, tdEnd, tdDel].forEach(td => tr.appendChild(td));
           flowsTableBody.appendChild(tr);
         });
+
+        // Mirror flows as text
+        flowsMirror.innerHTML = '<strong>Flows:</strong> ' + (state.flows.length ? state.flows.map(f => `<code>${f.name} (${f.amountMonthly}/m, ${f.startAge}–${f.endAge})</code>`).join(' · ') : '<em>none</em>');
 
         // pots
         potsWrap.innerHTML = '';
@@ -266,6 +280,9 @@
           card.appendChild(grid);
           potsWrap.appendChild(card);
         });
+
+        // Mirror pots as text
+        potsMirror.innerHTML = '<strong>Pots:</strong> ' + (state.pots.length ? state.pots.map(p => `<code>${p.name} (in £${p.inMonthly}/m for ${p.inYears}y → out start ${p.outStartAge} for ${p.outYears}y)</code>`).join(' · ') : '<em>none</em>');
 
         computeAndRenderAnnual();
       } catch (e) {
@@ -367,6 +384,10 @@
         annualBody.appendChild(tr);
       });
       warnEl.classList.toggle('hidden', !negPotSeen);
+
+      // mirrors + debug
+      annualMirror.innerHTML = `<strong>Annual rows:</strong> <code>${rows.length}</code>`;
+      dbg.textContent = `Flows: ${state.flows.length} · Pots: ${state.pots.length} · Annual rows: ${rows.length}`;
     }
 
     // ---------- Events ----------

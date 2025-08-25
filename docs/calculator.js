@@ -2,26 +2,21 @@
 // Lifetime Cashflow Calculator v6
 // ================================
 (function () {
-  // ---- Globals (expected by the app) ----
+  // ---- Globals ----
   window.__CALC_VERSION__ = "v6";
 
-  // Minimal starter state; keep shapes v4 expects
+  // Keep shapes v4 expects
   window.state = {
     currentAge: 40,
     endAge: 90,
     pots: [
-      // Example: { name: "Cash", balance: 10000 }
+      // e.g., { name: "Cash", balance: 10000 }
     ],
-    flowsTable: [
-      // Example row shape v4 may use:
-      // { year: 2025, income: 30000, expenses: 24000, net: 6000 }
-    ],
-    annualTable: [
-      // Example: { age: 40, opening: 0, net: 6000, closing: 6000 }
-    ],
+    flowsTable: [],
+    annualTable: [],
   };
 
-  // ---- Utility helpers ----
+  // ---- Utilities ----
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
@@ -46,18 +41,55 @@
     if (end) window.state.endAge = safeNumber(end.value, window.state.endAge);
   }
 
-  // ---- Default compute (replace with v4's) ----
-  // PASTE V4 compute() HERE (keep the signature).
+  // ---- DEV helpers (export/import/reset) ----
+  function download(filename, text) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function bindDevButtons() {
+    const btnExport = $("#btnExport");
+    const btnImport = $("#btnImport");
+    const btnReset  = $("#btnReset");
+    const file      = $("#importFile");
+
+    btnExport?.addEventListener("click", () => {
+      download(`cashflow_state_${Date.now()}.json`, JSON.stringify(window.state, null, 2));
+    });
+    btnImport?.addEventListener("click", () => file?.click());
+    file?.addEventListener("change", async () => {
+      const f = file.files?.[0]; if (!f) return;
+      try {
+        const json = JSON.parse(await f.text());
+        if (json && typeof json === "object") {
+          window.state = json;
+          window.compute();
+          window.render();
+        }
+      } catch (e) { console.error("Import failed", e); }
+    });
+    btnReset?.addEventListener("click", () => {
+      window.state = { currentAge: 40, endAge: 90, pots: [], flowsTable: [], annualTable: [] };
+      window.compute();
+      window.render();
+    });
+  }
+
+  // ---- compute() scaffold (replace with v4 engine) ----
+  // PASTE your v4 compute() logic inside this function body.
   window.compute = function compute() {
-    // This default just synthesizes trivial rows as a scaffold.
     const rows = [];
     const annual = [];
+    const startAge = safeNumber(window.state.currentAge, 40);
+    const endAge   = Math.max(startAge, safeNumber(window.state.endAge, 90));
     let opening = 0;
-    for (let age = window.state.currentAge; age <= window.state.endAge; age++) {
+    for (let age = startAge; age <= endAge; age++) {
       const income = age < 67 ? 30000 : 20000; // naive: work then pension
       const expenses = 24000;                  // naive flat cost
       const net = income - expenses;
-      const year = new Date().getFullYear() + (age - window.state.currentAge);
+      const year = new Date().getFullYear() + (age - startAge);
 
       rows.push({ year, income, expenses, net });
       const closing = opening + net;
@@ -69,12 +101,11 @@
     return { rows, annual };
   };
 
-  // ---- Default render (replace with v4's) ----
-  // PASTE V4 render() HERE (keep the signature).
+  // ---- render() scaffold (replace with v4 painter) ----
+  // PASTE your v4 render() logic inside this function body.
   window.render = function render() {
     try {
-      // badge first so we always get live feedback
-      setBadge();
+      setBadge(); // live feedback
 
       // pots
       const potsBody = $("#potsBody");
@@ -130,23 +161,20 @@
         }
       }
 
-      // final badge with counts (robust against empty states)
-      setBadge();
+      setBadge(); // update with counts
     } catch (err) {
       console.error("render() error:", err);
       setBadge("render error");
     }
   };
 
-  // ---- Wire-up & boot ----
+  // ---- Boot ----
   function boot() {
-    // Dev console breadcrumbs
     console.log("__CALC_VERSION__:", window.__CALC_VERSION__);
     console.log("state:", typeof window.state);
     console.log("render:", typeof window.render);
     console.log("compute:", typeof window.compute);
 
-    // Recompute on input changes (mirrors typical v4 behaviour)
     $$("#inputsCard input").forEach((el) => {
       el.addEventListener("input", () => {
         readInputsIntoState();
@@ -155,49 +183,11 @@
       });
     });
 
-    // First paint
-    readInputsIntoState();
     bindDevButtons();
-
+    readInputsIntoState();
     window.compute();
     window.render();
   }
-
-  function download(filename, text) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-function bindDevButtons() {
-  const btnExport = document.getElementById("btnExport");
-  const btnImport = document.getElementById("btnImport");
-  const btnReset  = document.getElementById("btnReset");
-  const file      = document.getElementById("importFile");
-
-  btnExport?.addEventListener("click", () => {
-    download(`cashflow_state_${Date.now()}.json`, JSON.stringify(window.state, null, 2));
-  });
-  btnImport?.addEventListener("click", () => file?.click());
-  file?.addEventListener("change", async () => {
-    const f = file.files?.[0]; if (!f) return;
-    try {
-      const json = JSON.parse(await f.text());
-      if (json && typeof json === "object") {
-        window.state = json;
-        window.compute();
-        window.render();
-      }
-    } catch (e) { console.error("Import failed", e); }
-  });
-  btnReset?.addEventListener("click", () => {
-    window.state = { currentAge: 40, endAge: 90, pots: [], flowsTable: [], annualTable: [] };
-    window.compute();
-    window.render();
-  });
-}
-
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);

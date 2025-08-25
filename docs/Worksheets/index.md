@@ -1,0 +1,24 @@
+---
+title: Worksheets
+---
+
+<link rel="stylesheet" href="../style.css">
+
+<nav>
+  <ul>
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../Guides/">Guides</a></li>
+    <li><a href="../Worksheets/">Worksheets</a></li>
+    <li><a href="../Templates/">Templates</a></li>
+    <li><a href="../Public-Resources/">Resources</a></li>
+  </ul>
+</nav>
+
+# Worksheets
+
+Printable and editable worksheets to help you plan life before money.
+
+- [Goals Checklist](./Goals_Checklist.html)
+- [Actions & Habit Tracker](./Actions_Habit_Tracker.html)
+- [Means Inventory](./Means_Inventory.html)
+- [Execution Review](./Execution_Review.html)

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calculator v5 Sanity Check</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    #badge { background: #0074D9; color: white; padding: 0.5rem 1rem; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Lifetime Cashflow Calculator v5</h1>
+  <div id="badge">Loading...</div>
+
+  <script>
+    // Define globals
+    window.__CALC_VERSION__ = "v5";
+    window.state = { test: true };
+    window.render = function() {
+      document.getElementById("badge").textContent =
+        "Calculator " + window.__CALC_VERSION__ + " is alive ✅";
+    };
+
+    // Log to console
+    console.log("__CALC_VERSION__:", window.__CALC_VERSION__);
+    console.log("state:", typeof window.state);
+    console.log("render:", typeof window.render);
+
+    // Call render
+    window.render();
+  </script>
+</body>
+</html>

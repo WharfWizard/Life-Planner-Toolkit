@@ -161,6 +161,42 @@
     window.render();
   }
 
+  function download(filename, text) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function bindDevButtons() {
+  const btnExport = document.getElementById("btnExport");
+  const btnImport = document.getElementById("btnImport");
+  const btnReset  = document.getElementById("btnReset");
+  const file      = document.getElementById("importFile");
+
+  btnExport?.addEventListener("click", () => {
+    download(`cashflow_state_${Date.now()}.json`, JSON.stringify(window.state, null, 2));
+  });
+  btnImport?.addEventListener("click", () => file?.click());
+  file?.addEventListener("change", async () => {
+    const f = file.files?.[0]; if (!f) return;
+    try {
+      const json = JSON.parse(await f.text());
+      if (json && typeof json === "object") {
+        window.state = json;
+        window.compute();
+        window.render();
+      }
+    } catch (e) { console.error("Import failed", e); }
+  });
+  btnReset?.addEventListener("click", () => {
+    window.state = { currentAge: 40, endAge: 90, pots: [], flowsTable: [], annualTable: [] };
+    window.compute();
+    window.render();
+  });
+}
+
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {

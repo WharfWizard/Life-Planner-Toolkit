@@ -2,64 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Back-of-the-Packet Cashflow (React, no build)</title>
+  <title>Cashflow (Debug)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { margin:0; background:#f8fafc; color:#0f172a; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-    .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
-    .muted { color:#475569; }
-    #err { display:none; background:#fff0f0; color:#7f1d1d; border:1px solid #fecaca; padding:10px; margin:12px 16px; border-radius:8px; }
-  </style>
-
-  <!-- React & ReactDOM -->
-  <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-
-  <!-- Recharts (primary) -->
-  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js"></script>
-  <!-- Fallback Recharts if needed -->
-  <script>
-    (function ensureRecharts(){
-      if (window.Recharts) return;
-      var alt = document.createElement('script');
-      alt.src = "https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js";
-      alt.onload = function(){ console.log("Recharts loaded via jsDelivr"); };
-      alt.onerror = function(){ console.error("Recharts failed to load from both CDNs"); };
-      document.head.appendChild(alt);
-    })();
-  </script>
-
-  <!-- Babel for JSX-in-app.js -->
-  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  <style>body{font-family:system-ui;padding:16px}</style>
 </head>
 <body>
-  <header>
-    <div class="container" style="display:flex; align-items:center; gap:12px; padding:12px 16px;">
-      <h1 style="margin:0; font-size:22px;">Lifetime Cashflow (Back-of-the-Packet)</h1>
-      <div class="muted" style="margin-left:auto; font-size:14px;">
-        Assumption: <strong>£ in = £ out</strong> (no growth • no inflation • no risk)
-      </div>
-    </div>
-  </header>
+  <h1>🔎 Calculator debug shell</h1>
+  <p id="status">HTML loaded.</p>
+  <noscript style="color:#b91c1c">❌ JavaScript is disabled.</noscript>
 
-  <div id="err"></div>
-
-  <main class="container" style="padding:16px 16px 48px;">
-    <div id="root"></div>
-  </main>
-
-  <!-- Load app.js (was app.jsx). Adds onerror + cache-buster -->
-  <script
-    id="app-script"
-    type="text/babel"
-    data-presets="env,react"
-    src="app.js?v=3"
-    onerror="(function(){var e=document.getElementById('err'); e.style.display='block'; e.textContent='Error: app.js failed to load (check path/docs folder)';})();"
-  ></script>
-
-  <!-- Quick sanity log (optional) -->
   <script>
-    console.log('Boot check → React:', !!window.React, 'ReactDOM:', !!window.ReactDOM, 'Recharts:', !!window.Recharts);
+    document.getElementById('status').textContent += ' JS running.';
+  </script>
+
+  <!-- Libs -->
+  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"
+          onload="document.getElementById('status').textContent += ' React ok.'"
+          onerror="document.getElementById('status').textContent += ' React FAIL.'"></script>
+  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"
+          onload="document.getElementById('status').textContent += ' ReactDOM ok.'"
+          onerror="document.getElementById('status').textContent += ' ReactDOM FAIL.'"></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js"
+          onload="document.getElementById('status').textContent += ' Recharts ok.'"
+          onerror="document.getElementById('status').textContent += ' Recharts FAIL.'"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"
+          onload="document.getElementById('status').textContent += ' Babel ok.'"
+          onerror="document.getElementById('status').textContent += ' Babel FAIL.'"></script>
+
+  <!-- App (tiny smoke) -->
+  <div id="root" style="margin-top:12px;padding:12px;border:1px solid #e5e7eb"></div>
+  <script type="text/babel" data-presets="env,react">
+    const root = document.getElementById('root');
+    root.textContent = 'Mounting React...';
+    if (!window.React || !window.ReactDOM) {
+      root.textContent = '❌ React/ReactDOM missing';
+    } else if (!window.Recharts) {
+      root.textContent = '❌ Recharts missing';
+    } else {
+      const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis } = window.Recharts;
+      const r = ReactDOM.createRoot(root);
+      r.render(
+        <div>
+          <h2>✅ React mounted</h2>
+          <div style={{height:160}}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={[{x:'A',y:10},{x:'B',y:20}]}>
+                <XAxis dataKey="x" /><YAxis /><Bar dataKey="y" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      );
+    }
   </script>
 </body>
 </html>

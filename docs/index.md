@@ -67,9 +67,11 @@ Explore the foundations of life planning and the GAME Plan framework.
 [Open the Google Sheet](https://docs.google.com/spreadsheets/d/e/2PACX-1vSpDiQkEKvEX13tdtLqpSlr_C0wSkt1baUWYJuoJswyYmnus15NWyK4nqLmoS6xjRmoUf0lTPGYjOml/pubhtml)
 
 ---
-<nav>
-  <a href="calculator.html">Calculator</a>
-</nav>
+## 💡 Lifetime Cashflow Forecaster (Back-of-the-Packet)
+
+We’ve added a simple, no-growth **Cashflow Calculator** that shows how money in equals money out over time — no inflation, no charges, no investment returns. It’s designed as a **“back-of-a-fag packet” tool**: quick feasibility checks for contribution and drawdown plans, with charts and annual summaries.
+
+👉 [Open the Cashflow Forecaster](calculator-react.html)
 
 ---
 

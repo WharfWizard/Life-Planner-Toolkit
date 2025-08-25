@@ -27,7 +27,7 @@ Starter documents you can adapt for your own planning and advocacy.
 <footer>
   <p>
     © Academy of Life Planning · 
-    <a href="https://aolp.co.uk" target="_blank">AoLP</a> |
+    <a href="https://www.aolp.info" target="_blank">AoLP</a> |
     <a href="https://www.planningmy.life" target="_blank">Planning My Life</a> |
     <a href="https://www.aolp.info/projects" target="_blank">Get SAFE</a>
   </p>

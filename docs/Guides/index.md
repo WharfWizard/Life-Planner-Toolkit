@@ -23,3 +23,12 @@ Explore the foundations of life planning and the GAME Plan framework.
 - [What is Life Planning?](./What-is-Life-Planning.html)  
 - [The GAME Plan](./The-GAME-Plan.html)  
 - <a href="./Code-of-Chivalry.pdf" target="_blank">Knights of Aquarius: Code of Chivalry (PDF)</a>
+
+<footer>
+  <p>
+    © Academy of Life Planning · 
+    <a href="https://aolp.co.uk" target="_blank">AoLP</a> |
+    <a href="https://www.planningmy.life" target="_blank">Planning My Life</a> |
+    <a href="https://www.aolp.info/projects" target="_blank">Get SAFE</a>
+  </p>
+</footer>

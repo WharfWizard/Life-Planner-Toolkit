@@ -25,7 +25,7 @@ Built for:
 - `docs/` – Homepage and styling for GitHub Pages  
 
 👉 Explore the live site:  
-[**Life Planner Toolkit Website**](https://<your-username>.github.io/Life-Planner-Toolkit/)
+[**Life Planner Toolkit Website**](https://wharfwizard.github.io/Life-Planner-Toolkit/)
 
 ---
 

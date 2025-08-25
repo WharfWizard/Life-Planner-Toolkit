@@ -22,3 +22,8 @@ Free-to-share resources for individuals, families, and communities.
 
 - [Rebuild After Harm](./Rebuild_After_Harm.html)
 - [FAQs](./FAQs.html)
+
+## 📝 Notion Templates
+
+- [The GAME Plan Report (Notion Template)](https://www.notion.so/The-GAME-Plan-Report-243e658e009e8079a461ead69d2a6790?source=copy_link)
+- [The Goliathon Masterclass (Notion Template)](https://www.notion.so/The-Goliathon-Masterclass-254e658e009e81619ed7e744c5e0592b?source=copy_link)

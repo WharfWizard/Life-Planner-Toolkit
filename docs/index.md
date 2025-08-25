@@ -6,7 +6,7 @@ title: Life Planner Toolkit
 <link rel="stylesheet" href="./style.css">
 
 <header>
-  <img src="./assets/Original.png" alt="Planning My Life Logo">
+  <img src="./assets/Original.png" alt="Planning My Life Logo" class="logo">
 </header>
 
 <nav>

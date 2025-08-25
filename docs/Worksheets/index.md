@@ -24,3 +24,13 @@ Printable and editable worksheets to help you plan life before money.
 - [Actions & Habit Tracker](./Actions_Habit_Tracker.html)
 - [Means Inventory](./Means_Inventory.html)
 - [Execution Review](./Execution_Review.html)
+
+
+<footer>
+  <p>
+    © Academy of Life Planning · 
+    <a href="https://aolp.co.uk" target="_blank">AoLP</a> |
+    <a href="https://www.planningmy.life" target="_blank">Planning My Life</a> |
+    <a href="https://www.aolp.info/projects" target="_blank">Get SAFE</a>
+  </p>
+</footer>

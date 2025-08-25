@@ -128,13 +128,14 @@ table th {
 }
 /* ===== Logo styling ===== */
 header {
-  text-align: center; /* centers logo */
-  margin: 1.5rem 0;
+  text-align: center;
+  margin: 1.25rem 0 1.75rem;
 }
 
 header .logo {
-  max-width: 160px; /* adjust size */
+  width: 80px;     /* fixed brand size */
   height: auto;
   display: inline-block;
 }
+
 

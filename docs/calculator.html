@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Planning My Life — Cashflow Forecaster</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      background: #fff5f5;
+      color: #222;
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #E10600;
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+    }
+    label { display: block; margin-top: 1rem; font-weight: bold; }
+    input {
+      width: 100%; padding: 0.5rem;
+      border-radius: 6px; border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 1rem; padding: 0.7rem 1.2rem;
+      background: #E10600; color: #fff;
+      border: none; border-radius: 8px;
+      font-weight: bold; cursor: pointer;
+    }
+    button:hover { background: #c10500; }
+    .result {
+      margin-top: 1.5rem; padding: 1rem;
+      background: #fff; border-radius: 8px;
+      border: 1px solid #eee;
+    }
+    table {
+      width: 100%; border-collapse: collapse; margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ddd; padding: 0.5rem; text-align: center;
+    }
+    th { background: #f0f0f0; }
+    footer {
+      font-size: 0.75rem; margin-top: 2rem;
+      text-align: center; color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Planning My Life — Cashflow Forecaster</h1>
+  <p><strong>Assumption:</strong> £ in = £ out. No growth, no inflation, no risk.</p>
+
+  <label>Monthly Contribution (£):</label>
+  <input id="inMonthly" type="number" value="500" />
+
+  <label>Contribution Years:</label>
+  <input id="inYears" type="number" value="20" />
+
+  <label>Withdrawal Years:</label>
+  <input id="outYears" type="number" value="20" />
+
+  <button onclick="calculate()">Calculate</button>
+
+  <div id="output" class="result" style="display:none"></div>
+
+  <footer>
+    © <span id="year"></span> Planning My Life — Free done-by-you app.  
+    Built for clarity: money in equals money out over time.
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    function currency(v) {
+      return "£" + Number(v).toLocaleString("en-GB", { maximumFractionDigits: 0 });
+    }
+
+    function calculate() {
+      const inMonthly = parseFloat(document.getElementById("inMonthly").value) || 0;
+      const inYears = parseInt(document.getElementById("inYears").value) || 0;
+      const outYears = parseInt(document.getElementById("outYears").value) || 1;
+
+      const inTotal = inMonthly * inYears * 12;
+      const outMonthly = inTotal / (outYears * 12);
+
+      let html = "<h2>Results</h2>";
+      html += `<p>You contribute <strong>${currency(inMonthly)}</strong> per month for <strong>${inYears}</strong> years.</p>`;
+      html += `<p>Total contributions: <strong>${currency(inTotal)}</strong>.</p>`;
+      html += `<p>This will pay out about <strong>${currency(outMonthly)}</strong> per month for <strong>${outYears}</strong> years.</p>`;
+
+      html += "<table><tr><th>Year</th><th>Contributions</th><th>Payout</th></tr>";
+      for (let y = 1; y <= Math.max(inYears, outYears); y++) {
+        let contrib = y <= inYears ? currency(inMonthly * 12) : "-";
+        let payout = y <= outYears ? currency(outMonthly * 12) : "-";
+        html += `<tr><td>${y}</td><td>${contrib}</td><td>${payout}</td></tr>`;
+      }
+      html += "</table>";
+
+      const outDiv = document.getElementById("output");
+      outDiv.innerHTML = html;
+      outDiv.style.display = "block";
+    }
+  </script>
+</body>
+</html>

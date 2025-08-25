@@ -133,9 +133,10 @@ header {
 }
 
 header .logo {
-  width: 160px;     /* fixed brand size */
+  width: 160px;   /* larger brand size */
   height: auto;
   display: inline-block;
 }
+
 
 

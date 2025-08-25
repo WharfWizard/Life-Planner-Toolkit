@@ -2,24 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Planning My Life — Cashflow Forecaster</title>
+  <title>Calculator – Life Planner Toolkit</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    /* ---- Global Toolkit styling ---- */
     body {
       font-family: system-ui, Arial, sans-serif;
-      background: #fff5f5;
+      margin: 0; padding: 0;
+      line-height: 1.6;
+      background: #fafafa;
       color: #222;
-      max-width: 700px;
+    }
+    header {
+      background: #E10600;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0; font-size: 1.5rem;
+    }
+    nav {
+      background: #333;
+      padding: 0.5rem;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 1rem;
+      font-weight: bold;
+    }
+    nav a:hover { text-decoration: underline; }
+    main {
+      max-width: 800px;
       margin: 2rem auto;
       padding: 1rem;
+      background: #fff;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    h1 {
-      color: #E10600;
-      font-size: 1.6rem;
-      margin-bottom: 0.5rem;
-    }
+    h2 { color: #E10600; }
     label { display: block; margin-top: 1rem; font-weight: bold; }
     input {
       width: 100%; padding: 0.5rem;
@@ -34,7 +57,8 @@
     button:hover { background: #c10500; }
     .result {
       margin-top: 1.5rem; padding: 1rem;
-      background: #fff; border-radius: 8px;
+      background: #fff5f5;
+      border-radius: 8px;
       border: 1px solid #eee;
     }
     table {
@@ -45,31 +69,46 @@
     }
     th { background: #f0f0f0; }
     footer {
-      font-size: 0.75rem; margin-top: 2rem;
-      text-align: center; color: #555;
+      font-size: 0.8rem;
+      text-align: center;
+      color: #555;
+      padding: 1rem;
+      margin-top: 2rem;
+      background: #f5f5f5;
     }
   </style>
 </head>
 <body>
-  <h1>Planning My Life — Cashflow Forecaster</h1>
-  <p><strong>Assumption:</strong> £ in = £ out. No growth, no inflation, no risk.</p>
+  <header>
+    <h1>Life Planner Toolkit</h1>
+  </header>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="calculator.html">Calculator</a>
+    <!-- add other toolkit pages here -->
+  </nav>
 
-  <label>Monthly Contribution (£):</label>
-  <input id="inMonthly" type="number" value="500" />
+  <main>
+    <h2>Planning My Life — Cashflow Forecaster</h2>
+    <p><strong>Assumption:</strong> £ in = £ out. No growth, no inflation, no risk.</p>
 
-  <label>Contribution Years:</label>
-  <input id="inYears" type="number" value="20" />
+    <label>Monthly Contribution (£):</label>
+    <input id="inMonthly" type="number" value="500" />
 
-  <label>Withdrawal Years:</label>
-  <input id="outYears" type="number" value="20" />
+    <label>Contribution Years:</label>
+    <input id="inYears" type="number" value="20" />
 
-  <button onclick="calculate()">Calculate</button>
+    <label>Withdrawal Years:</label>
+    <input id="outYears" type="number" value="20" />
 
-  <div id="output" class="result" style="display:none"></div>
+    <button onclick="calculate()">Calculate</button>
+
+    <div id="output" class="result" style="display:none"></div>
+  </main>
 
   <footer>
     © <span id="year"></span> Planning My Life — Free done-by-you app.  
-    Built for clarity: money in equals money out over time.
+    Part of the Life Planner Toolkit.
   </footer>
 
   <script>
@@ -87,7 +126,7 @@
       const inTotal = inMonthly * inYears * 12;
       const outMonthly = inTotal / (outYears * 12);
 
-      let html = "<h2>Results</h2>";
+      let html = "<h3>Results</h3>";
       html += `<p>You contribute <strong>${currency(inMonthly)}</strong> per month for <strong>${inYears}</strong> years.</p>`;
       html += `<p>Total contributions: <strong>${currency(inTotal)}</strong>.</p>`;
       html += `<p>This will pay out about <strong>${currency(outMonthly)}</strong> per month for <strong>${outYears}</strong> years.</p>`;

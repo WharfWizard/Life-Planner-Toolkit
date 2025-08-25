@@ -1,0 +1,22 @@
+---
+title: Public Resources
+---
+
+<link rel="stylesheet" href="../style.css">
+
+<nav>
+  <ul>
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../Guides/">Guides</a></li>
+    <li><a href="../Worksheets/">Worksheets</a></li>
+    <li><a href="../Templates/">Templates</a></li>
+    <li><a href="../Public-Resources/">Resources</a></li>
+  </ul>
+</nav>
+
+# Public Resources
+
+Free-to-share resources for individuals, families, and communities.
+
+- [Rebuild After Harm](./Rebuild_After_Harm.html)
+- [FAQs](./FAQs.html)

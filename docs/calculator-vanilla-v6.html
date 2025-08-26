@@ -86,6 +86,18 @@
     <span class="muted">AoLP | Planning My Life | Get SAFE</span>
   </footer>
 
+      <!-- v4 Editors (interactive) -->
+    <section class="card col-12" id="editorsCard">
+      <h2 class="small muted" style="margin-top:0">Edit flows & pots</h2>
+
+      <!-- Flows editor mounts here -->
+      <div id="flowsEditor"></div>
+
+      <!-- Pots editor mounts here -->
+      <div id="potsEditor" style="margin-top:12px;"></div>
+    </section>
+
+
   <!-- External JS (adapter + boot). Must load first. -->
   <script defer src="./calculator.js?v=2025-08-26-4"></script>
 
@@ -235,5 +247,220 @@
     };
   })();
   </script>
+  <script>
+/* ========= v4 Render (editors only) — uses v6 painter for tables ========= */
+
+(function(){
+  // tiny helpers
+  const $  = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+  const £ = (n) => new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP",maximumFractionDigits:0}).format(isNaN(n)?0:n);
+
+  function make(tag, props = {}, children = []) {
+    const el = document.createElement(tag);
+    for (const [k,v] of Object.entries(props)) {
+      if (k === 'class') el.className = v;
+      else if (k === 'style') Object.assign(el.style, v);
+      else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
+      else el.setAttribute(k, v);
+    }
+    (Array.isArray(children)?children:[children]).forEach(c=>{
+      if (c==null) return;
+      el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return el;
+  }
+
+  // Expose v4Render so the adapter calls this before v6 paints tables
+  window.v4Render = function v4Render(){
+    const s = window.state || (window.state = {});
+
+    // ---------- FLOWS EDITOR ----------
+    const flowsRoot = $("#flowsEditor");
+    if (flowsRoot) {
+      flowsRoot.innerHTML = "";
+      const header = make("div", { class:"row", style:{marginBottom:"8px", display:"flex", alignItems:"center", justifyContent:"space-between"} }, [
+        make("h3", { style:{margin:"0"} }, "Incomes & Expenses"),
+        make("button", {
+          id:"addFlowBtn",
+          class:"btn",
+          onclick: () => {
+            if (!('nextFlowId' in s)) s.nextFlowId = (s.flows?.length||0)+1;
+            s.flows = s.flows || [];
+            s.flows.push({ id: s.nextFlowId++, name:"New flow", amountMonthly:0, startAge: s.currentAge ?? 40, endAge: s.endAge ?? 90 });
+            // compute + repaint (tables get drawn by v6 painter)
+            window.compute(); window.render();
+          }
+        }, "+ Add flow")
+      ]);
+
+      const table = make("table", { id:"flowsEditorTable", style:{width:"100%", borderCollapse:"collapse"} });
+      const thead = make("thead", {}, make("tr", { class:"muted" }, [
+        make("th", {}, "Name"),
+        make("th", {}, "£/month"),
+        make("th", {}, "Start age"),
+        make("th", {}, "End age"),
+        make("th", {}, "")
+      ]));
+      const tbody = make("tbody");
+
+      (s.flows||[]).forEach(f=>{
+        const tr = document.createElement("tr");
+
+        const tdName = document.createElement("td");
+        const nameInput = make("input", { value: f.name ?? "", oninput: e => { f.name = e.target.value; } });
+        tdName.appendChild(nameInput);
+
+        const tdAmt = document.createElement("td");
+        const amtInput = make("input", { type:"number", value: f.amountMonthly ?? 0, oninput: e => {
+          f.amountMonthly = parseFloat(e.target.value||0);
+          window.compute(); window.render();
+        }});
+        tdAmt.appendChild(amtInput);
+
+        const tdStart = document.createElement("td");
+        const sInput = make("input", { type:"number", value: f.startAge ?? (s.currentAge||40), oninput: e => {
+          f.startAge = parseFloat(e.target.value||0);
+          window.compute(); window.render();
+        }});
+        tdStart.appendChild(sInput);
+
+        const tdEnd = document.createElement("td");
+        const eInput = make("input", { type:"number", value: f.endAge ?? (s.endAge||90), oninput: e => {
+          f.endAge = parseFloat(e.target.value||0);
+          window.compute(); window.render();
+        }});
+        tdEnd.appendChild(eInput);
+
+        const tdDel = document.createElement("td");
+        tdDel.style.textAlign = "right";
+        const delBtn = make("button", {
+          class:"btn",
+          style:{ background:"#e2e8f0", color:"#0f172a" },
+          onclick: () => {
+            s.flows = (s.flows||[]).filter(x=>x.id!==f.id);
+            window.compute(); window.render();
+          }
+        }, "Delete");
+        tdDel.appendChild(delBtn);
+
+        [tdName, tdAmt, tdStart, tdEnd, tdDel].forEach(td=>tr.appendChild(td));
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(thead); table.appendChild(tbody);
+      flowsRoot.appendChild(header);
+      flowsRoot.appendChild(make("div", { style:{overflowX:"auto"} }, table));
+      flowsRoot.appendChild(make("p", { class:"muted", style:{fontSize:"12px", marginTop:"8px"} }, "Tip: positive = income; negative = expense. Ages inclusive."));
+    }
+
+    // ---------- POTS EDITOR ----------
+    const potsRoot = $("#potsEditor");
+    if (potsRoot) {
+      potsRoot.innerHTML = "";
+
+      const header = make("div", { class:"row", style:{marginBottom:"8px", display:"flex", alignItems:"center", justifyContent:"space-between"} }, [
+        make("h3", { style:{margin:"0"} }, "Pay-In / Pay-Out Pots"),
+        make("button", {
+          id:"addPotBtn",
+          class:"btn",
+          onclick: () => {
+            if (!('nextPotId' in s)) s.nextPotId = (s.pots?.length||0)+1;
+            s.pots = s.pots || [];
+            s.pots.push({
+              id: s.nextPotId++,
+              name:`Pot ${s.nextPotId-1}`,
+              inMonthly:0, inStartAge: s.currentAge ?? 40, inYears:10,
+              outStartAge: Math.min(s.endAge ?? 90, (s.currentAge ?? 40)+11), outYears:10,
+              lockEqualInOut:true, overrideOutMonthly:""
+            });
+            window.compute(); window.render();
+          }
+        }, "+ Add pot")
+      ]);
+
+      const hint = make("p", { class:"muted", style:{margin:"4px 0 12px 0"} }, "Total withdrawals equal total contributions (unless overridden). If years differ, we compute a level payout.");
+      potsRoot.appendChild(header);
+      potsRoot.appendChild(hint);
+
+      (s.pots||[]).forEach(p=>{
+        const card = make("div", { class:"card", style:{padding:"12px", marginBottom:"8px"} });
+
+        const row = make("div", { style:{display:"flex", alignItems:"center", gap:"8px", marginBottom:"8px"} });
+        const nameInput = make("input", { value:p.name ?? "", style:{maxWidth:"420px"}, oninput:e=>{ p.name = e.target.value; }});
+        const delBtn = make("button", { class:"btn", style:{background:"#e2e8f0", color:"#0f172a", marginLeft:"auto"}, onclick:()=>{
+          s.pots = (s.pots||[]).filter(x=>x.id!==p.id);
+          window.compute(); window.render();
+        }}, "Delete");
+        row.appendChild(nameInput); row.appendChild(delBtn);
+
+        const grid = make("div", { style:{ display:"grid", gridTemplateColumns:"repeat(12, minmax(0,1fr))", gap:"8px", alignItems:"end" } });
+
+        function attach(labelText, el, spanCols) {
+          const lab = document.createElement("label");
+          lab.style.gridColumn = `span ${spanCols}`;
+          lab.append(labelText+" ", el);
+          grid.appendChild(lab);
+        }
+
+        const inMonthlyEl = make("input", { type:"number", value:p.inMonthly ?? 0 });
+        const inStartEl   = make("input", { type:"number", value:p.inStartAge ?? (s.currentAge||40) });
+        const inYearsEl   = make("input", { type:"number", value:p.inYears ?? 0 });
+        const outStartEl  = make("input", { type:"number", value:p.outStartAge ?? (s.currentAge||40) });
+        const outYearsEl  = make("input", { type:"number", value:p.outYears ?? 0 });
+        const lockEl      = make("input", { type:"checkbox", ...(p.lockEqualInOut ? {checked:true}:{}) });
+        const overrideEl  = make("input", { type:"number", value:p.overrideOutMonthly ?? "", placeholder:"auto", style:{width:"120px"} });
+        const impliedSpan = document.createElement("strong"); impliedSpan.textContent = "—";
+
+        attach("Pay-in £/month", inMonthlyEl, 3);
+        attach("Pay-in start age", inStartEl, 3);
+        attach("Pay-in years", inYearsEl, 2);
+        attach("Pay-out start age", outStartEl, 3);
+        attach("Pay-out years", outYearsEl, 2);
+
+        const lockWrap = document.createElement("label");
+        lockWrap.style.cssText = "grid-column:span 12; display:flex; align-items:center; gap:8px";
+        lockWrap.append(lockEl, "Lock £out to equal £in (if years match; else compute equivalent)");
+        grid.appendChild(lockWrap);
+
+        const overWrap = document.createElement("label");
+        overWrap.style.cssText = "grid-column:span 12; display:flex; align-items:center; gap:8px";
+        const hint = document.createElement("span"); hint.className = "muted"; hint.style.fontSize = "12px"; hint.textContent = "(leave blank to auto-compute)";
+        const impliedWrap = document.createElement("div"); impliedWrap.className="muted"; impliedWrap.style.marginLeft="auto"; impliedWrap.append("Implied pay-out: ", impliedSpan, " / month");
+        overWrap.append("Override £/month out: ", overrideEl, hint, impliedWrap);
+        grid.appendChild(overWrap);
+
+        function updatePot() {
+          p.inMonthly = parseFloat(inMonthlyEl.value||0);
+          p.inStartAge = parseFloat(inStartEl.value||0);
+          p.inYears = parseFloat(inYearsEl.value||0);
+          p.outStartAge = parseFloat(outStartEl.value||0);
+          p.outYears = parseFloat(outYearsEl.value||0);
+          p.lockEqualInOut = !!lockEl.checked;
+          p.overrideOutMonthly = overrideEl.value;
+
+          const inMonths = Math.max(0, Math.round((p.inYears||0) * 12));
+          const outMonths = Math.max(0, Math.round((p.outYears||0) * 12));
+          let implied = ((p.inMonthly||0) * inMonths) / Math.max(1, outMonths);
+          if (p.lockEqualInOut && p.inYears === p.outYears) implied = (p.inMonthly||0);
+          const outMonthly = p.overrideOutMonthly !== "" ? parseFloat(p.overrideOutMonthly || 0) : implied;
+          impliedSpan.textContent = £(outMonthly);
+
+          window.compute(); window.render();
+        }
+        [inMonthlyEl, inStartEl, inYearsEl, outStartEl, outYearsEl, lockEl, overrideEl].forEach(el => el.addEventListener("input", updatePot));
+        updatePot();
+
+        card.appendChild(row);
+        card.appendChild(grid);
+        potsRoot.appendChild(card);
+      });
+    }
+
+    // Age inputs in the left card are already wired by v6 adapter; nothing to do here.
+  };
+})();
+</script>
+
 </body>
 </html>

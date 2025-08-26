@@ -1,230 +1,294 @@
-// ================================
-// Lifetime Cashflow Calculator v6 — Adapter Build
-// ================================
+// docs/calculator.js
 (function () {
-  // ---- Globals ----
-  window.__CALC_VERSION__ = "v6";
+  "use strict";
 
-  // Keep shapes v4 expects
-  window.state = {
-    currentAge: 40,
-    endAge: 90,
-    pots: [
-      // e.g., { name: "Cash", balance: 10000 }
-    ],
-    flowsTable: [],
-    annualTable: [],
-  };
+  // ---------------------------
+  // Version + tiny helpers
+  // ---------------------------
+  const __CALC_VERSION__ = "v6";
+  console.log("__CALC_VERSION__:", __CALC_VERSION__);
 
-  // ---- Utilities ----
-  const $ = (sel) => document.querySelector(sel);
-  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+  const GBP = new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP",
+    maximumFractionDigits: 0,
+  });
 
-  function setBadge(extra = "") {
-    const el = $("#badge");
-    const flows = window.state?.flowsTable?.length || 0;
-    const annual = window.state?.annualTable?.length || 0;
-    if (el) {
-      el.textContent = `Calculator ${window.__CALC_VERSION__} ✅ | Flows: ${flows} | Annual: ${annual}${extra ? " | " + extra : ""}`;
-    }
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  // ---------------------------
+  // State (persisted)
+  // ---------------------------
+  const STORAGE_KEY = "lifetime-calc-v6";
+  let state = loadState();
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return {
+      currentAge: 40,
+      endAge: 90,
+      flows: [
+        { id: 1, name: "Salary", amountMonthly: 2000, startAge: 40, endAge: 65 },
+        { id: 2, name: "Living costs", amountMonthly: -1500, startAge: 40, endAge: 90 },
+      ],
+      nextFlowId: 3,
+      pots: [
+        {
+          id: 1,
+          name: "Pension-like pot",
+          inMonthly: 500, inStartAge: 45, inYears: 20,
+          outStartAge: 66, outYears: 20,
+          lockEqualInOut: true,
+          overrideOutMonthly: ""
+        },
+      ],
+      nextPotId: 2,
+      flowsTable: [],
+      annualTable: [],
+    };
   }
 
-  function safeNumber(v, fallback = 0) {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : fallback;
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
   }
 
-  function readInputsIntoState() {
-    const curr = $("#currentAge");
-    const end = $("#endAge");
-    if (curr) window.state.currentAge = safeNumber(curr.value, window.state.currentAge);
-    if (end) window.state.endAge = safeNumber(end.value, window.state.endAge);
-  }
+  // Expose for debugging
+  window.state = state;
+  console.log("state:", typeof state);
 
-  // ---- DEV helpers (export/import/reset) ----
-  function download(filename, text) {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-  function bindDevButtons() {
-    const btnExport = $("#btnExport");
-    const btnImport = $("#btnImport");
-    const btnReset  = $("#btnReset");
-    const file      = $("#importFile");
+  // ---------------------------
+  // Compute (debounced)
+  // ---------------------------
+  let computeQueued = false;
+  let renderQueued = false;
 
-    btnExport?.addEventListener("click", () => {
-      download(`cashflow_state_${Date.now()}.json`, JSON.stringify(window.state, null, 2));
-    });
-    btnImport?.addEventListener("click", () => file?.click());
-    file?.addEventListener("change", async () => {
-      const f = file.files?.[0]; if (!f) return;
-      try {
-        const json = JSON.parse(await f.text());
-        if (json && typeof json === "object") {
-          window.state = json;
-          window.compute();
-          window.render();
-        }
-      } catch (e) { console.error("Import failed", e); }
-    });
-    btnReset?.addEventListener("click", () => {
-      window.state = { currentAge: 40, endAge: 90, pots: [], flowsTable: [], annualTable: [] };
-      window.compute();
-      window.render();
-    });
-  }
-
-  // ---- FALLBACK compute()/render() (simple scaffold) ----
-  function fallbackCompute() {
-    const rows = [];
-    const annual = [];
-    const startAge = safeNumber(window.state.currentAge, 40);
-    const endAge   = Math.max(startAge, safeNumber(window.state.endAge, 90));
-    let opening = 0;
-    for (let age = startAge; age <= endAge; age++) {
-      const income = age < 67 ? 30000 : 20000; // naive: work then pension
-      const expenses = 24000;                  // naive flat cost
-      const net = income - expenses;
-      const year = new Date().getFullYear() + (age - startAge);
-
-      rows.push({ year, income, expenses, net });
-      const closing = opening + net;
-      annual.push({ age, opening, net, closing });
-      opening = closing;
-    }
-    window.state.flowsTable = rows;
-    window.state.annualTable = annual;
-    return { rows, annual };
-  }
-
-  function fallbackRender() {
-    // pots
-    const potsBody = $("#potsBody");
-    if (potsBody) {
-      potsBody.innerHTML = "";
-      const pots = window.state.pots || [];
-      if (!pots.length) {
-        potsBody.innerHTML = `<tr><td class="muted">None</td><td class="muted" style="text-align:right">—</td></tr>`;
+  function computeNow() {
+    console.log("compute: function");
+    try {
+      // If a v4/v6 bridge is present, let it fill flowsTable/annualTable
+      if (typeof window.v4Compute === "function") {
+        window.v4Compute();
       } else {
-        for (const p of pots) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${p.name ?? "Pot"}</td><td>${(p.balance ?? 0).toLocaleString(undefined,{maximumFractionDigits:0})}</td>`;
-          potsBody.appendChild(tr);
-        }
+        // Fallback: zero-out tables
+        state.flowsTable = [];
+        state.annualTable = [];
       }
+    } catch (err) {
+      console.error("compute() error:", err);
+    }
+  }
+
+  function renderNow() {
+    console.log("render: function");
+    // Badge
+    const badge = $("#badge");
+    if (badge) {
+      const rows = state?.flowsTable?.length || 0;
+      const annual = state?.annualTable?.length || 0;
+      badge.textContent = `Calculator ${__CALC_VERSION__} ✅ | Flows: ${rows} | Annual: ${annual}`;
     }
 
-    // flows
+    // Inputs
+    const currentAgeEl = $("#currentAge");
+    const endAgeEl = $("#endAge");
+    if (currentAgeEl) currentAgeEl.value = Number(state.currentAge || 0);
+    if (endAgeEl) endAgeEl.value = Number(state.endAge || 0);
+
+    // Flows table
     const flowsBody = $("#flowsBody");
     if (flowsBody) {
       flowsBody.innerHTML = "";
-      for (const r of window.state.flowsTable || []) {
+      const rows = state.flowsTable || [];
+      if (!rows.length) {
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r.year}</td>
-          <td>${(r.income ?? 0).toLocaleString()}</td>
-          <td>${(r.expenses ?? 0).toLocaleString()}</td>
-          <td>${(r.net ?? 0).toLocaleString()}</td>
-        `;
+        const td = document.createElement("td");
+        td.colSpan = 4;
+        td.className = "muted";
+        td.textContent = "No rows yet";
+        tr.appendChild(td);
         flowsBody.appendChild(tr);
-      }
-      if (!window.state.flowsTable?.length) {
-        flowsBody.innerHTML = `<tr><td class="muted" colspan="4">No rows</td></tr>`;
+      } else {
+        rows.forEach(r => {
+          const tr = document.createElement("tr");
+          const tYear = document.createElement("td"); tYear.textContent = String(r.year);
+          const tInc  = document.createElement("td"); tInc.textContent  = GBP.format(r.income || 0);
+          const tExp  = document.createElement("td"); tExp.textContent  = GBP.format(r.expenses || 0);
+          const tNet  = document.createElement("td"); tNet.textContent  = GBP.format(r.net || 0);
+          tr.append(tYear, tInc, tExp, tNet);
+          flowsBody.appendChild(tr);
+        });
       }
     }
 
-    // annual
+    // Annual table
     const annualBody = $("#annualBody");
     if (annualBody) {
       annualBody.innerHTML = "";
-      for (const r of window.state.annualTable || []) {
+      const rows = state.annualTable || [];
+      if (!rows.length) {
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r.age}</td>
-          <td>${(r.opening ?? 0).toLocaleString()}</td>
-          <td>${(r.net ?? 0).toLocaleString()}</td>
-          <td>${(r.closing ?? 0).toLocaleString()}</td>
-        `;
+        const td = document.createElement("td");
+        td.colSpan = 4;
+        td.className = "muted";
+        td.textContent = "No rows yet";
+        tr.appendChild(td);
         annualBody.appendChild(tr);
+      } else {
+        rows.forEach(r => {
+          const tr = document.createElement("tr");
+          const tAge = document.createElement("td"); tAge.textContent = String(r.age);
+          const tOpn = document.createElement("td"); tOpn.textContent = GBP.format(r.opening || 0);
+          const tNet = document.createElement("td"); tNet.textContent = GBP.format(r.net || 0);
+          const tCls = document.createElement("td"); tCls.textContent = GBP.format(r.closing || 0);
+          tr.append(tAge, tOpn, tNet, tCls);
+          annualBody.appendChild(tr);
+        });
       }
-      if (!window.state.annualTable?.length) {
-        annualBody.innerHTML = `<tr><td class="muted" colspan="4">No rows</td></tr>`;
+    }
+
+    // Pots summary (simple name column; balances are implied/handled by compute engine if needed)
+    const potsBody = $("#potsBody");
+    if (potsBody) {
+      potsBody.innerHTML = "";
+      const pots = state.pots || [];
+      if (!pots.length) {
+        const tr = document.createElement("tr");
+        const td1 = document.createElement("td");
+        td1.className = "muted";
+        td1.textContent = "None yet";
+        const td2 = document.createElement("td");
+        td2.className = "muted";
+        td2.style.textAlign = "right";
+        td2.textContent = "—";
+        tr.append(td1, td2);
+        potsBody.appendChild(tr);
+      } else {
+        pots.forEach(p => {
+          const tr = document.createElement("tr");
+          const td1 = document.createElement("td"); td1.textContent = p.name || `Pot ${p.id}`;
+          const td2 = document.createElement("td"); td2.style.textAlign = "right"; td2.textContent = "—";
+          tr.append(td1, td2);
+          potsBody.appendChild(tr);
+        });
       }
     }
   }
 
-  // ---- V4 Adapters ----
-  // Option A: paste functions with these names and we’ll use them:
-  //   window.v4Compute = function() { ...; return { rows, annual }; }
-  //   window.v4Render  = function() { ... }
-  //
-  // Option B: register both at once:
-  //   window.registerV4({ compute, render })
-  window.registerV4 = function registerV4(api) {
-    if (api && typeof api.compute === "function") window.v4Compute = api.compute;
-    if (api && typeof api.render  === "function") window.v4Render  = api.render;
-  };
+  // Debounced wrappers (prevents runaway loops on rapid input)
+  function compute() {
+    if (computeQueued) return;
+    computeQueued = true;
+    requestAnimationFrame(() => {
+      computeQueued = false;
+      console.log("[v4] compute() called");
+      computeNow();
+      saveState();
+      render(); // paint after compute
+    });
+  }
+  function render() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(() => {
+      renderQueued = false;
+      renderNow();
+    });
+  }
 
-  // ---- Public compute/render wrappers (do not rename) ----
-  window.compute = function compute() {
-    try {
-      if (typeof window.v4Compute === "function") {
-        const out = window.v4Compute();
-        // Ensure state tables updated even if v4 returns data separately
-        if (out && typeof out === "object") {
-          if (Array.isArray(out.rows))   window.state.flowsTable  = out.rows;
-          if (Array.isArray(out.annual)) window.state.annualTable = out.annual;
-        }
-        return out;
-      }
-      return fallbackCompute();
-    } catch (err) {
-      console.error("compute() error:", err);
-      setBadge("compute error");
-      return fallbackCompute();
-    }
-  };
+  // Expose for HTML hooks and v4 bridge
+  window.compute = compute;
+  window.render = render;
 
-  window.render = function render() {
-    try {
-      setBadge(); // heartbeat before paint
-      if (typeof window.v4Render === "function") {
-        window.v4Render();
-      } else {
-        fallbackRender();
-      }
-      setBadge(); // refresh counts after paint
-    } catch (err) {
-      console.error("render() error:", err);
-      setBadge("render error");
-      // Try a minimal safe render to keep UI responsive
-      try { fallbackRender(); setBadge("fallback render"); } catch {}
-    }
-  };
+  // ---------------------------
+  // Wire UI events
+  // ---------------------------
+  function wireInputs() {
+    const currentAgeEl = $("#currentAge");
+    const endAgeEl = $("#endAge");
 
-  // ---- Boot ----
-  function boot() {
-    console.log("__CALC_VERSION__:", window.__CALC_VERSION__);
-    console.log("state:", typeof window.state);
-    console.log("render:", typeof window.render);
-    console.log("compute:", typeof window.compute);
-
-    // Input listeners
-    $$("#inputsCard input").forEach((el) => {
-      el.addEventListener("input", () => {
-        readInputsIntoState();
-        window.compute();
-        window.render();
+    if (currentAgeEl) {
+      currentAgeEl.addEventListener("input", () => {
+        state.currentAge = Number(currentAgeEl.value || 0);
+        compute();
       });
+    }
+    if (endAgeEl) {
+      endAgeEl.addEventListener("input", () => {
+        state.endAge = Number(endAgeEl.value || 0);
+        compute();
+      });
+    }
+
+    // Export
+    const btnExport = $("#btnExport");
+    if (btnExport) btnExport.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "lifetime-calc-v6.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     });
 
-    bindDevButtons();
-    readInputsIntoState();
-    window.compute();
-    window.render();
+    // Import
+    const btnImport = $("#btnImport");
+    const fileInput = $("#importFile");
+    if (btnImport && fileInput) {
+      btnImport.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          if (typeof data === "object" && data) {
+            state = Object.assign({}, state, data);
+            window.state = state; // keep exposed reference in sync
+            compute();
+            // v4 editors repaint (if present)
+            if (typeof window.v4Render === "function") window.v4Render();
+          }
+        } catch (err) {
+          alert("Import failed: " + (err?.message || err));
+        } finally {
+          e.target.value = "";
+        }
+      });
+    }
+
+    // Reset
+    const btnReset = $("#btnReset");
+    if (btnReset) {
+      btnReset.addEventListener("click", () => {
+        localStorage.removeItem(STORAGE_KEY);
+        state = loadState();
+        window.state = state; // keep exposed reference in sync
+        // Paint editors first (so inputs reflect defaults), then compute
+        if (typeof window.v4Render === "function") window.v4Render();
+        compute();
+      });
+    }
+  }
+
+  // ---------------------------
+  // Boot
+  // ---------------------------
+  function boot() {
+    // Initial v4 editors render (inputs + editors)
+    if (typeof window.v4Render === "function") window.v4Render();
+
+    // Wire all buttons/inputs once DOM is ready
+    wireInputs();
+
+    // First compute + paint
+    compute();
   }
 
   if (document.readyState === "loading") {
@@ -233,4 +297,5 @@
     boot();
   }
 })();
+
 

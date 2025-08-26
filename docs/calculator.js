@@ -1,5 +1,5 @@
 // ================================
-// Lifetime Cashflow Calculator v6
+// Lifetime Cashflow Calculator v6 — Adapter Build
 // ================================
 (function () {
   // ---- Globals ----
@@ -77,9 +77,8 @@
     });
   }
 
-  // ---- compute() scaffold (replace with v4 engine) ----
-  // PASTE your v4 compute() logic inside this function body.
-  window.compute = function compute() {
+  // ---- FALLBACK compute()/render() (simple scaffold) ----
+  function fallbackCompute() {
     const rows = [];
     const annual = [];
     const startAge = safeNumber(window.state.currentAge, 40);
@@ -99,72 +98,110 @@
     window.state.flowsTable = rows;
     window.state.annualTable = annual;
     return { rows, annual };
+  }
+
+  function fallbackRender() {
+    // pots
+    const potsBody = $("#potsBody");
+    if (potsBody) {
+      potsBody.innerHTML = "";
+      const pots = window.state.pots || [];
+      if (!pots.length) {
+        potsBody.innerHTML = `<tr><td class="muted">None</td><td class="muted" style="text-align:right">—</td></tr>`;
+      } else {
+        for (const p of pots) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${p.name ?? "Pot"}</td><td>${(p.balance ?? 0).toLocaleString(undefined,{maximumFractionDigits:0})}</td>`;
+          potsBody.appendChild(tr);
+        }
+      }
+    }
+
+    // flows
+    const flowsBody = $("#flowsBody");
+    if (flowsBody) {
+      flowsBody.innerHTML = "";
+      for (const r of window.state.flowsTable || []) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.year}</td>
+          <td>${(r.income ?? 0).toLocaleString()}</td>
+          <td>${(r.expenses ?? 0).toLocaleString()}</td>
+          <td>${(r.net ?? 0).toLocaleString()}</td>
+        `;
+        flowsBody.appendChild(tr);
+      }
+      if (!window.state.flowsTable?.length) {
+        flowsBody.innerHTML = `<tr><td class="muted" colspan="4">No rows</td></tr>`;
+      }
+    }
+
+    // annual
+    const annualBody = $("#annualBody");
+    if (annualBody) {
+      annualBody.innerHTML = "";
+      for (const r of window.state.annualTable || []) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.age}</td>
+          <td>${(r.opening ?? 0).toLocaleString()}</td>
+          <td>${(r.net ?? 0).toLocaleString()}</td>
+          <td>${(r.closing ?? 0).toLocaleString()}</td>
+        `;
+        annualBody.appendChild(tr);
+      }
+      if (!window.state.annualTable?.length) {
+        annualBody.innerHTML = `<tr><td class="muted" colspan="4">No rows</td></tr>`;
+      }
+    }
+  }
+
+  // ---- V4 Adapters ----
+  // Option A: paste functions with these names and we’ll use them:
+  //   window.v4Compute = function() { ...; return { rows, annual }; }
+  //   window.v4Render  = function() { ... }
+  //
+  // Option B: register both at once:
+  //   window.registerV4({ compute, render })
+  window.registerV4 = function registerV4(api) {
+    if (api && typeof api.compute === "function") window.v4Compute = api.compute;
+    if (api && typeof api.render  === "function") window.v4Render  = api.render;
   };
 
-  // ---- render() scaffold (replace with v4 painter) ----
-  // PASTE your v4 render() logic inside this function body.
+  // ---- Public compute/render wrappers (do not rename) ----
+  window.compute = function compute() {
+    try {
+      if (typeof window.v4Compute === "function") {
+        const out = window.v4Compute();
+        // Ensure state tables updated even if v4 returns data separately
+        if (out && typeof out === "object") {
+          if (Array.isArray(out.rows))   window.state.flowsTable  = out.rows;
+          if (Array.isArray(out.annual)) window.state.annualTable = out.annual;
+        }
+        return out;
+      }
+      return fallbackCompute();
+    } catch (err) {
+      console.error("compute() error:", err);
+      setBadge("compute error");
+      return fallbackCompute();
+    }
+  };
+
   window.render = function render() {
     try {
-      setBadge(); // live feedback
-
-      // pots
-      const potsBody = $("#potsBody");
-      if (potsBody) {
-        potsBody.innerHTML = "";
-        const pots = window.state.pots || [];
-        if (!pots.length) {
-          potsBody.innerHTML = `<tr><td class="muted">None</td><td class="muted" style="text-align:right">—</td></tr>`;
-        } else {
-          for (const p of pots) {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${p.name ?? "Pot"}</td><td>${(p.balance ?? 0).toLocaleString(undefined,{maximumFractionDigits:0})}</td>`;
-            potsBody.appendChild(tr);
-          }
-        }
+      setBadge(); // heartbeat before paint
+      if (typeof window.v4Render === "function") {
+        window.v4Render();
+      } else {
+        fallbackRender();
       }
-
-      // flows
-      const flowsBody = $("#flowsBody");
-      if (flowsBody) {
-        flowsBody.innerHTML = "";
-        for (const r of window.state.flowsTable || []) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.year}</td>
-            <td>${(r.income ?? 0).toLocaleString()}</td>
-            <td>${(r.expenses ?? 0).toLocaleString()}</td>
-            <td>${(r.net ?? 0).toLocaleString()}</td>
-          `;
-          flowsBody.appendChild(tr);
-        }
-        if (!window.state.flowsTable?.length) {
-          flowsBody.innerHTML = `<tr><td class="muted" colspan="4">No rows</td></tr>`;
-        }
-      }
-
-      // annual
-      const annualBody = $("#annualBody");
-      if (annualBody) {
-        annualBody.innerHTML = "";
-        for (const r of window.state.annualTable || []) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.age}</td>
-            <td>${(r.opening ?? 0).toLocaleString()}</td>
-            <td>${(r.net ?? 0).toLocaleString()}</td>
-            <td>${(r.closing ?? 0).toLocaleString()}</td>
-          `;
-          annualBody.appendChild(tr);
-        }
-        if (!window.state.annualTable?.length) {
-          annualBody.innerHTML = `<tr><td class="muted" colspan="4">No rows</td></tr>`;
-        }
-      }
-
-      setBadge(); // update with counts
+      setBadge(); // refresh counts after paint
     } catch (err) {
       console.error("render() error:", err);
       setBadge("render error");
+      // Try a minimal safe render to keep UI responsive
+      try { fallbackRender(); setBadge("fallback render"); } catch {}
     }
   };
 
@@ -175,6 +212,7 @@
     console.log("render:", typeof window.render);
     console.log("compute:", typeof window.compute);
 
+    // Input listeners
     $$("#inputsCard input").forEach((el) => {
       el.addEventListener("input", () => {
         readInputsIntoState();
@@ -195,3 +233,4 @@
     boot();
   }
 })();
+

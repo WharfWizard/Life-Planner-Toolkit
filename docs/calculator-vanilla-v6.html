@@ -32,7 +32,7 @@
 </head>
 <body>
   <header>
-    <h1>Lifetime Cashflow Calculator <span class="muted">/ Back‑of‑the‑Packet</span></h1>
+    <h1>Lifetime Cashflow Calculator <span class="muted">/ Back-of-the-Packet</span></h1>
     <div id="badge">Loading…</div>
   </header>
 
@@ -87,58 +87,153 @@
   </footer>
 
   <!-- External JS (adapter + boot). Must load first. -->
-  <script defer src="./calculator.js?v=2025-08-26-2"></script>
+  <script defer src="./calculator.js?v=2025-08-26-4"></script>
 
-  <!-- Your v4 engine overrides (loaded during parsing, BEFORE the deferred adapter executes) -->
+  <!-- v4 engine overrides (parsed before deferred adapter executes) -->
   <script>
-    // Define v4 functions FIRST
-    window.v4Compute = function () {
-      // TODO: paste your full v4 compute() here
-      // Either update state.* tables OR return { rows, annual }
-      const rows = [], annual = [];
-      const start = (window.state?.currentAge ?? 40);
-      const end   = Math.max(start, (window.state?.endAge ?? 90));
-      let opening = 0;
-      for (let age = start; age <= end; age++) {
-        const income = age < 67 ? 30000 : 20000;
-        const expenses = 24000;
-        const net = income - expenses;
-        const year = new Date().getFullYear() + (age - start);
-        rows.push({ year, income, expenses, net });
-        const closing = opening + net;
-        annual.push({ age, opening, net, closing });
-        opening = closing;
+  /* ========= v4 → v6 bridge (compute-only; painter handled by v6) ========= */
+
+  window.v4Compute = function () {
+    // --- helpers (scoped; no global pollution) ---
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const ageToMonthIndex = (curr, age) => Math.round((age - curr) * 12);
+    const monthsRange = (a, b) => { const out=[]; for (let i=Math.max(0,a); i<b; i++) out.push(i); return out; };
+
+    // --- state & defaults from v4 ---
+    const s = window.state || (window.state = {});
+    if (!("currentAge" in s)) s.currentAge = 40;
+    if (!("endAge" in s)) s.endAge = 90;
+
+    // Provide v4-style defaults if absent
+    if (!Array.isArray(s.flows)) {
+      s.flows = [
+        { id: 1, name: "Salary",       amountMonthly: 2000,  startAge: 40, endAge: 65 },
+        { id: 2, name: "Living costs", amountMonthly: -1500, startAge: 40, endAge: 90 },
+      ];
+      s.nextFlowId = 3;
+    }
+    if (!Array.isArray(s.pots)) {
+      s.pots = [
+        { id: 1, name: "Pension-like pot", inMonthly: 500, inStartAge: 45, inYears: 20, outStartAge: 66, outYears: 20, lockEqualInOut: true, overrideOutMonthly: "" },
+      ];
+      s.nextPotId = 2;
+    }
+
+    // --- inputs (v4 behaviour) ---
+    s.currentAge = clamp(Number(s.currentAge)||0, 0, 120);
+    s.endAge     = clamp(Number(s.endAge)||0, s.currentAge, 120);
+
+    // --- timeline arrays (monthly engine, annual summarise) ---
+    const months = Math.max(0, Math.round((s.endAge - s.currentAge) * 12 + 12));
+    const netPerMonth = new Array(months).fill(0);
+    const potBalancesPerPot = s.pots.map(()=> new Array(months).fill(0));
+
+    // --- flows → monthly net ---
+    s.flows.forEach(f => {
+      const sIdx = ageToMonthIndex(s.currentAge, f.startAge);
+      const eIdx = ageToMonthIndex(s.currentAge, (f.endAge ?? s.endAge) + 1);
+      monthsRange(sIdx, eIdx).forEach(m => {
+        if (m>=0 && m<months) netPerMonth[m] += Number(f.amountMonthly)||0;
+      });
+    });
+
+    // --- pots → monthly net + running pot balances (per pot) ---
+    s.pots.forEach((p, idx) => {
+      const inMonths   = Math.max(0, Math.round((Number(p.inYears)||0) * 12));
+      const outMonths  = Math.max(0, Math.round((Number(p.outYears)||0) * 12));
+      const inStart    = ageToMonthIndex(s.currentAge, Number(p.inStartAge)||s.currentAge);
+      const outStart   = ageToMonthIndex(s.currentAge, Number(p.outStartAge)||s.currentAge);
+
+      // compute monthly payout
+      let outMonthly;
+      const override = parseFloat(p.overrideOutMonthly);
+      if (!isNaN(override)) {
+        outMonthly = override;
+      } else if (p.lockEqualInOut) {
+        outMonthly = (p.inYears === p.outYears) ? (Number(p.inMonthly)||0)
+                 : ((Number(p.inMonthly)||0) * inMonths) / Math.max(1, outMonths);
+      } else {
+        outMonthly = ((Number(p.inMonthly)||0) * inMonths) / Math.max(1, outMonths);
       }
-      return { rows, annual };
-      // Or:
-      // state.flowsTable = rows; state.annualTable = annual; return { rows, annual };
+
+      // contributions phase (money into pot → negative to net cash)
+      monthsRange(inStart, inStart + inMonths).forEach(m => {
+        if (m>=0 && m<months) {
+          netPerMonth[m] -= Number(p.inMonthly)||0;
+          potBalancesPerPot[idx][m] = (m>0? potBalancesPerPot[idx][m-1]:0) + (Number(p.inMonthly)||0);
+        }
+      });
+      // carry forward balance to end of timeline
+      for (let m=inStart+inMonths; m<months; m++) {
+        potBalancesPerPot[idx][m] = potBalancesPerPot[idx][m-1] || 0;
+      }
+
+      // withdrawals phase (money out of pot → positive to net cash)
+      monthsRange(outStart, outStart + outMonths).forEach(m => {
+        if (m>=0 && m<months) {
+          netPerMonth[m] += Number(outMonthly)||0;
+          potBalancesPerPot[idx][m] = (m>0? potBalancesPerPot[idx][m-1]:0) - (Number(outMonthly)||0);
+        }
+      });
+
+      // pre-fill balances before inStart
+      for (let m=0; m<Math.min(inStart, months); m++) {
+        potBalancesPerPot[idx][m] = m>0? potBalancesPerPot[idx][m-1] : 0;
+      }
+    });
+
+    // --- total pot balance per month (not displayed in v6) ---
+    const totalPotBalance = new Array(months).fill(0);
+    for (let m=0; m<months; m++) {
+      totalPotBalance[m] = s.pots.length ? s.pots.map((_,i)=>potBalancesPerPot[i][m]||0).reduce((a,b)=>a+b,0) : 0;
+    }
+
+    // --- annual rollup ---
+    const rows = [];        // {year, income, expenses, net}
+    const annual = [];      // {age, opening, net, closing}
+    const startYearAge = Math.floor(s.currentAge);
+    const totalYears   = Math.ceil(months/12);
+
+    let opening = 0;
+    for (let y=0; y<totalYears; y++) {
+      const from = y*12;
+      const to   = Math.min(months, from+12);
+
+      let inflows = 0, outflows = 0;
+      for (let m=from; m<to; m++) {
+        const v = netPerMonth[m] || 0;
+        if (v >= 0) inflows += v; else outflows += -v;
+      }
+      const net = inflows - outflows;
+      const year = new Date().getFullYear() + y;
+
+      rows.push({ year, income: Math.round(inflows), expenses: Math.round(outflows), net: Math.round(net) });
+
+      const closing = opening + net;
+      annual.push({ age: startYearAge + y, opening: Math.round(opening), net: Math.round(net), closing: Math.round(closing) });
+      opening = closing;
+    }
+
+    // sync into state for painter + return for adapter
+    s.flowsTable  = rows;
+    s.annualTable = annual;
+    return { rows, annual };
+  };
+
+  /* === Diagnostics: confirm v4 path is active === */
+  (function(){
+    const oldC = window.v4Compute;
+    window.v4Compute = function(){
+      console.log("[v4] compute() called");
+      window.__USED_V4_COMPUTE__ = true;
+      const out = oldC ? oldC() : undefined;
+      if (out && typeof out === "object") {
+        if (Array.isArray(out.rows))   window.state.flowsTable  = out.rows;
+        if (Array.isArray(out.annual)) window.state.annualTable = out.annual;
+      }
+      return out;
     };
-
-    window.v4Render = function () {
-      // TODO: paste your full v4 render() here
-      // You can rely on IDs: currentAge, endAge, flowsBody, annualBody, potsBody
-      // (If omitted, the v6 fallback painter will render tables.)
-    };
-
-    // Optional diagnostics (AFTER v4 is defined)
-    (function(){
-      const oldC = window.v4Compute, oldR = window.v4Render;
-      window.v4Compute = function(){
-        console.log("[v4] compute() called");
-        const out = oldC ? oldC() : undefined;
-        window.__USED_V4_COMPUTE__ = true;
-        return out;
-      };
-      window.v4Render = function(){
-        console.log("[v4] render() called");
-        window.__USED_V4_RENDER__ = true;
-        return oldR ? oldR() : undefined;
-      };
-    })();
-
-    // Do NOT call compute()/render() here; the adapter will call them on DOMContentLoaded.
+  })();
   </script>
 </body>
 </html>
-
-

@@ -223,12 +223,11 @@
   </script>
 
   
-<!-- v4 Render (editors + tables) -->
+<!-- v4 Render (editors only) — v6 paints the tables -->
 <script>
 (function(){
   const $  = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-  const gbp = (n) => new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP",maximumFractionDigits:0}).format(isNaN(n)?0:n);
+  const £ = (n) => new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP",maximumFractionDigits:0}).format(isNaN(n)?0:n);
 
   function make(tag, props = {}, children = []) {
     const el = document.createElement(tag);
@@ -245,76 +244,14 @@
     return el;
   }
 
-  function paintTables() {
-    const s = window.state || {};
-    // --- Pots (simple list; balances not tracked here) ---
-    const potsBody = $("#potsBody");
-    if (potsBody) {
-      potsBody.innerHTML = "";
-      const pots = s.pots || [];
-      if (!pots.length) {
-        potsBody.innerHTML = `<tr><td class="muted">None</td><td class="muted" style="text-align:right">—</td></tr>`;
-      } else {
-        for (const p of pots) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${p.name ?? "Pot"}</td><td class="muted" style="text-align:right">—</td>`;
-          potsBody.appendChild(tr);
-        }
-      }
-    }
-
-    // --- Flows table ---
-    const flowsBody = $("#flowsBody");
-    if (flowsBody) {
-      flowsBody.innerHTML = "";
-      const rows = s.flowsTable || [];
-      if (!rows.length) {
-        flowsBody.innerHTML = `<tr><td class="muted" colspan="4">No rows</td></tr>`;
-      } else {
-        for (const r of rows) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.year}</td>
-            <td>${(r.income ?? 0).toLocaleString()}</td>
-            <td>${(r.expenses ?? 0).toLocaleString()}</td>
-            <td>${(r.net ?? 0).toLocaleString()}</td>
-          `;
-          flowsBody.appendChild(tr);
-        }
-      }
-    }
-
-    // --- Annual table ---
-    const annualBody = $("#annualBody");
-    if (annualBody) {
-      annualBody.innerHTML = "";
-      const rows = s.annualTable || [];
-      if (!rows.length) {
-        annualBody.innerHTML = `<tr><td class="muted" colspan="4">No rows</td></tr>`;
-      } else {
-        for (const r of rows) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.age}</td>
-            <td>${(r.opening ?? 0).toLocaleString()}</td>
-            <td>${(r.net ?? 0).toLocaleString()}</td>
-            <td>${(r.closing ?? 0).toLocaleString()}</td>
-          `;
-          annualBody.appendChild(tr);
-        }
-      }
-    }
-  }
-
-  // Expose v4Render so adapter calls it; we draw editors and tables here.
   window.v4Render = function v4Render(){
     const s = window.state || (window.state = {});
 
-    // ---------- FLOWS EDITOR ----------
+    /* ---------- FLOWS EDITOR ---------- */
     const flowsRoot = $("#flowsEditor");
     if (flowsRoot) {
       flowsRoot.innerHTML = "";
-      const header = make("div", { style:{marginBottom:"8px", display:"flex", alignItems:"center", justifyContent:"space-between"} }, [
+      const header = make("div", { style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"8px"} }, [
         make("h3", { style:{margin:"0"} }, "Incomes & Expenses"),
         make("button", {
           id:"addFlowBtn",
@@ -323,77 +260,72 @@
             if (!('nextFlowId' in s)) s.nextFlowId = (s.flows?.length||0)+1;
             s.flows = s.flows || [];
             s.flows.push({ id: s.nextFlowId++, name:"New flow", amountMonthly:0, startAge: s.currentAge ?? 40, endAge: s.endAge ?? 90 });
-            window.compute(); window.render();
+            window.compute(); // no render() here
           }
         }, "+ Add flow")
       ]);
 
-      const table = make("table", { id:"flowsEditorTable", style:{width:"100%", borderCollapse:"collapse"} });
-      const thead = make("thead", {}, make("tr", { class:"muted" }, [
+      const table = make("table", { style:{width:"100%", borderCollapse:"collapse"} });
+      table.appendChild(make("thead", {}, make("tr", { class:"muted" }, [
         make("th", {}, "Name"),
         make("th", {}, "£/month"),
         make("th", {}, "Start age"),
         make("th", {}, "End age"),
         make("th", {}, "")
-      ]));
+      ])));
       const tbody = make("tbody");
 
       (s.flows||[]).forEach(f=>{
         const tr = document.createElement("tr");
 
         const tdName = document.createElement("td");
-        const nameInput = make("input", { value: f.name ?? "", oninput: e => { f.name = e.target.value; } });
-        tdName.appendChild(nameInput);
+        tdName.appendChild(make("input", { value: f.name ?? "", oninput: e => { f.name = e.target.value; }}));
 
         const tdAmt = document.createElement("td");
-        const amtInput = make("input", { type:"number", value: f.amountMonthly ?? 0, oninput: e => {
+        tdAmt.appendChild(make("input", { type:"number", value: f.amountMonthly ?? 0, oninput: e => {
           f.amountMonthly = parseFloat(e.target.value||0);
-          window.compute(); window.render();
-        }});
-        tdAmt.appendChild(amtInput);
+          window.compute();
+        }}));
 
         const tdStart = document.createElement("td");
-        const sInput = make("input", { type:"number", value: f.startAge ?? (s.currentAge||40), oninput: e => {
+        tdStart.appendChild(make("input", { type:"number", value: f.startAge ?? (s.currentAge||40), oninput: e => {
           f.startAge = parseFloat(e.target.value||0);
-          window.compute(); window.render();
-        }});
-        tdStart.appendChild(sInput);
+          window.compute();
+        }}));
 
         const tdEnd = document.createElement("td");
-        const eInput = make("input", { type:"number", value: f.endAge ?? (s.endAge||90), oninput: e => {
+        tdEnd.appendChild(make("input", { type:"number", value: f.endAge ?? (s.endAge||90), oninput: e => {
           f.endAge = parseFloat(e.target.value||0);
-          window.compute(); window.render();
-        }});
-        tdEnd.appendChild(eInput);
+          window.compute();
+        }}));
 
         const tdDel = document.createElement("td");
         tdDel.style.textAlign = "right";
-        const delBtn = make("button", {
+        tdDel.appendChild(make("button", {
           class:"btn",
           style:{ background:"#e2e8f0", color:"#0f172a" },
           onclick: () => {
             s.flows = (s.flows||[]).filter(x=>x.id!==f.id);
-            window.compute(); window.render();
+            window.compute();
           }
-        }, "Delete");
-        tdDel.appendChild(delBtn);
+        }, "Delete"));
 
         [tdName, tdAmt, tdStart, tdEnd, tdDel].forEach(td=>tr.appendChild(td));
         tbody.appendChild(tr);
       });
 
-      table.appendChild(thead); table.appendChild(tbody);
+      table.appendChild(tbody);
       flowsRoot.appendChild(header);
       flowsRoot.appendChild(make("div", { style:{overflowX:"auto"} }, table));
       flowsRoot.appendChild(make("p", { class:"muted", style:{fontSize:"12px", marginTop:"8px"} }, "Tip: positive = income; negative = expense. Ages inclusive."));
     }
 
-    // ---------- POTS EDITOR ----------
+    /* ---------- POTS EDITOR ---------- */
     const potsRoot = $("#potsEditor");
     if (potsRoot) {
       potsRoot.innerHTML = "";
 
-      const header = make("div", { style:{marginBottom:"8px", display:"flex", alignItems:"center", justifyContent:"space-between"} }, [
+      const header = make("div", { style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"8px"} }, [
         make("h3", { style:{margin:"0"} }, "Pay-In / Pay-Out Pots"),
         make("button", {
           id:"addPotBtn",
@@ -408,14 +340,14 @@
               outStartAge: Math.min(s.endAge ?? 90, (s.currentAge ?? 40)+11), outYears:10,
               lockEqualInOut:true, overrideOutMonthly:""
             });
-            window.compute(); window.render();
+            window.compute();
           }
         }, "+ Add pot")
       ]);
 
-      const hint = make("p", { class:"muted", style:{margin:"4px 0 12px 0"} }, "Total withdrawals equal total contributions (unless overridden). If years differ, we compute a level payout.");
+      const intro = make("p", { class:"muted", style:{margin:"4px 0 12px 0"} }, "Total withdrawals equal total contributions (unless overridden). If years differ, we compute a level payout.");
       potsRoot.appendChild(header);
-      potsRoot.appendChild(hint);
+      potsRoot.appendChild(intro);
 
       (s.pots||[]).forEach(p=>{
         const card = make("div", { class:"card", style:{padding:"12px", marginBottom:"8px"} });
@@ -424,7 +356,7 @@
         const nameInput = make("input", { value:p.name ?? "", style:{maxWidth:"420px"}, oninput:e=>{ p.name = e.target.value; }});
         const delBtn = make("button", { class:"btn", style:{background:"#e2e8f0", color:"#0f172a", marginLeft:"auto"}, onclick:()=>{
           s.pots = (s.pots||[]).filter(x=>x.id!==p.id);
-          window.compute(); window.render();
+          window.compute();
         }}, "Delete");
         row.appendChild(nameInput); row.appendChild(delBtn);
 
@@ -459,12 +391,12 @@
 
         const overWrap = document.createElement("label");
         overWrap.style.cssText = "grid-column:span 12; display:flex; align-items:center; gap:8px";
-        const hintSmall = document.createElement("span"); hintSmall.className = "muted"; hintSmall.style.fontSize = "12px"; hintSmall.textContent = "(leave blank to auto-compute)";
+        const hint = document.createElement("span"); hint.className = "muted"; hint.style.fontSize = "12px"; hint.textContent = "(leave blank to auto-compute)";
         const impliedWrap = document.createElement("div"); impliedWrap.className="muted"; impliedWrap.style.marginLeft="auto"; impliedWrap.append("Implied pay-out: ", impliedSpan, " / month");
-        overWrap.append("Override £/month out: ", overrideEl, hintSmall, impliedWrap);
+        overWrap.append("Override £/month out: ", overrideEl, hint, impliedWrap);
         grid.appendChild(overWrap);
 
-        function updatePot() {
+        function updatePot(silent=false) {
           p.inMonthly = parseFloat(inMonthlyEl.value||0);
           p.inStartAge = parseFloat(inStartEl.value||0);
           p.inYears = parseFloat(inYearsEl.value||0);
@@ -478,24 +410,27 @@
           let implied = ((p.inMonthly||0) * inMonths) / Math.max(1, outMonths);
           if (p.lockEqualInOut && p.inYears === p.outYears) implied = (p.inMonthly||0);
           const outMonthly = p.overrideOutMonthly !== "" ? parseFloat(p.overrideOutMonthly || 0) : implied;
-          impliedSpan.textContent = gbp(outMonthly);
+          impliedSpan.textContent = £(outMonthly);
 
-          window.compute(); window.render();
+          if (!silent) window.compute(); // never call render() here
         }
-        [inMonthlyEl, inStartEl, inYearsEl, outStartEl, outYearsEl, lockEl, overrideEl].forEach(el => el.addEventListener("input", updatePot));
-        updatePot();
+
+        // wire inputs
+        [inMonthlyEl, inStartEl, inYearsEl, outStartEl, outYearsEl, lockEl, overrideEl]
+          .forEach(el => el.addEventListener("input", () => updatePot(false)));
+
+        // initial paint without triggering compute/render loop
+        updatePot(true);
 
         card.appendChild(row);
         card.appendChild(grid);
         potsRoot.appendChild(card);
       });
     }
-
-    // Finally, paint the tables from state
-    paintTables();
   };
 })();
 </script>
+
 
 </body>
 </html>

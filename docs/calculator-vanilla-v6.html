@@ -86,6 +86,34 @@
     <span class="muted">AoLP | Planning My Life | Get SAFE</span>
   </footer>
 
+<!-- External JS -->
+<script defer src="./calculator.js?v=2025-08-26-1"></script>
+
+<!-- Your v4 engine overrides -->
+<script>
+  // your window.v4Compute = function () { ... }
+  // your window.v4Render  = function () { ... }
+
+  // === diagnostics wrapper (Point 1) ===
+  (function(){
+    const oldC = window.v4Compute, oldR = window.v4Render;
+    window.v4Compute = function(){
+      console.log("[v4] compute() called");
+      const out = oldC ? oldC() : undefined;
+      window.__USED_V4_COMPUTE__ = true;
+      return out;
+    };
+    window.v4Render = function(){
+      console.log("[v4] render() called");
+      window.__USED_V4_RENDER__ = true;
+      return oldR ? oldR() : undefined;
+    };
+  })();
+
+  // optional: trigger one paint now
+  window.compute();
+  window.render();
+</script>
    <!-- External JS -->
   <script defer src="./calculator.js?v=2025-08-26-1"></script>
 

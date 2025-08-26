@@ -86,7 +86,21 @@
     <span class="muted">AoLP | Planning My Life | Get SAFE</span>
   </footer>
 
-  <!-- External JS (versioned for cache‑bust) -->
-  <script defer src="./calculator.js?v=2025-08-25-5"></script>
+   <!-- External JS -->
+  <script defer src="./calculator.js?v=2025-08-26-1"></script>
+
+  <!-- Your v4 engine overrides -->
+  <script>
+    window.v4Compute = function () {
+      // paste your v4 compute() logic here
+      return { rows: window.state.flowsTable, annual: window.state.annualTable };
+    };
+
+    window.v4Render = function () {
+      // paste your v4 render() logic here
+      // can rely on IDs: currentAge, endAge, flowsBody, annualBody, potsBody
+    };
+  </script>
 </body>
 </html>
+

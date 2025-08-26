@@ -72,7 +72,7 @@ Explore the foundations of life planning and the GAME Plan framework.
 
 We’ve added a simple **no-growth cashflow calculator**…
 
-👉 [Open the Lifetime Cashflow Forecaster](calculator-vanilla-v6.html?v=2025-08-26-8)
+👉 [Open the Lifetime Cashflow Forecaster](calculator-vanilla-v6.html?v=2025-08-26-10)
 
 
 

@@ -86,49 +86,59 @@
     <span class="muted">AoLP | Planning My Life | Get SAFE</span>
   </footer>
 
-<!-- External JS -->
-<script defer src="./calculator.js?v=2025-08-26-1"></script>
+  <!-- External JS (adapter + boot). Must load first. -->
+  <script defer src="./calculator.js?v=2025-08-26-2"></script>
 
-<!-- Your v4 engine overrides -->
-<script>
-  // your window.v4Compute = function () { ... }
-  // your window.v4Render  = function () { ... }
-
-  // === diagnostics wrapper (Point 1) ===
-  (function(){
-    const oldC = window.v4Compute, oldR = window.v4Render;
-    window.v4Compute = function(){
-      console.log("[v4] compute() called");
-      const out = oldC ? oldC() : undefined;
-      window.__USED_V4_COMPUTE__ = true;
-      return out;
-    };
-    window.v4Render = function(){
-      console.log("[v4] render() called");
-      window.__USED_V4_RENDER__ = true;
-      return oldR ? oldR() : undefined;
-    };
-  })();
-
-  // optional: trigger one paint now
-  window.compute();
-  window.render();
-</script>
-   <!-- External JS -->
-  <script defer src="./calculator.js?v=2025-08-26-1"></script>
-
-  <!-- Your v4 engine overrides -->
+  <!-- Your v4 engine overrides (loaded during parsing, BEFORE the deferred adapter executes) -->
   <script>
+    // Define v4 functions FIRST
     window.v4Compute = function () {
-      // paste your v4 compute() logic here
-      return { rows: window.state.flowsTable, annual: window.state.annualTable };
+      // TODO: paste your full v4 compute() here
+      // Either update state.* tables OR return { rows, annual }
+      const rows = [], annual = [];
+      const start = (window.state?.currentAge ?? 40);
+      const end   = Math.max(start, (window.state?.endAge ?? 90));
+      let opening = 0;
+      for (let age = start; age <= end; age++) {
+        const income = age < 67 ? 30000 : 20000;
+        const expenses = 24000;
+        const net = income - expenses;
+        const year = new Date().getFullYear() + (age - start);
+        rows.push({ year, income, expenses, net });
+        const closing = opening + net;
+        annual.push({ age, opening, net, closing });
+        opening = closing;
+      }
+      return { rows, annual };
+      // Or:
+      // state.flowsTable = rows; state.annualTable = annual; return { rows, annual };
     };
 
     window.v4Render = function () {
-      // paste your v4 render() logic here
-      // can rely on IDs: currentAge, endAge, flowsBody, annualBody, potsBody
+      // TODO: paste your full v4 render() here
+      // You can rely on IDs: currentAge, endAge, flowsBody, annualBody, potsBody
+      // (If omitted, the v6 fallback painter will render tables.)
     };
+
+    // Optional diagnostics (AFTER v4 is defined)
+    (function(){
+      const oldC = window.v4Compute, oldR = window.v4Render;
+      window.v4Compute = function(){
+        console.log("[v4] compute() called");
+        const out = oldC ? oldC() : undefined;
+        window.__USED_V4_COMPUTE__ = true;
+        return out;
+      };
+      window.v4Render = function(){
+        console.log("[v4] render() called");
+        window.__USED_V4_RENDER__ = true;
+        return oldR ? oldR() : undefined;
+      };
+    })();
+
+    // Do NOT call compute()/render() here; the adapter will call them on DOMContentLoaded.
   </script>
 </body>
 </html>
+
 

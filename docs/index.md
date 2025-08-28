@@ -70,7 +70,7 @@ Explore the foundations of life planning and the GAME Plan framework.
 
 ## Lifetime Cashflow Forecaster (Back-of-the-Packet)
 
-We’ve added a simple **no-growth cashflow calculator**…
+We’ve added a simple **no-growth cashflow calculator**… (work in progress)
 
 👉 [Open the Lifetime Cashflow Forecaster](calculator-vanilla-v6.html?v=2025-08-26-10)
 
